@@ -1,0 +1,15 @@
+[submodule "3rdparty/ranges-v3"]
+	path = 3rdparty/ranges-v3
+	url = https://github.com/ericniebler/range-v3.git
+[submodule "3rdparty/abseil"]
+	path = 3rdparty/abseil
+	url = https://github.com/abseil/abseil-cpp
+[submodule "3rdParty/concurrentqueue"]
+	path = 3rdParty/concurrentqueue
+	url = https://github.com/cameron314/concurrentqueue.git
+[submodule "3rdparty/parallel-hashmap"]
+	path = 3rdparty/parallel-hashmap
+	url = https://github.com/greg7mdp/parallel-hashmap.git
+[submodule "3rdparty/fmt"]
+	path = 3rdparty/fmt
+	url = https://github.com/fmtlib/fmt.git

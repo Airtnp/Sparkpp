@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="Sparkpp"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;CMake Files\cmake\;CMake Files\..\;CMake Files\..\..\;CMake Files\..\..\..\;CMake Files\..\..\..\usr\;CMake Files\..\..\..\usr\local\;CMake Files\..\..\..\usr\local\lib\;CMake Files\..\..\..\usr\local\lib\cmake\;CMake Files\..\..\..\usr\local\lib\cmake\CapnProto\;CMake Files\..\..\..\usr\lib\;CMake Files\..\..\..\usr\lib\cmake\;CMake Files\..\..\..\usr\lib\cmake\Boost-1.71.0\;CMake Files\..\..\..\usr\lib\cmake\boost_headers-1.71.0\;CMake Files\..\..\..\usr\lib\cmake\boost_system-1.71.0\;CMake Files\..\..\..\usr\lib\cmake\boost_thread-1.71.0\;CMake Files\..\..\..\usr\lib\cmake\boost_serialization-1.71.0\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/home/ubuntu/Sparkpp/cmake-build-release"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/ubuntu/Sparkpp/cmake-build-release/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/ubuntu/Sparkpp/cmake-build-release/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/ubuntu/Sparkpp/cmake-build-release/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/ubuntu/Sparkpp/cmake-build-release/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/home/ubuntu/Sparkpp/cmake-build-release"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/ubuntu/Sparkpp/cmake-build-release/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/ubuntu/Sparkpp/cmake-build-release/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/ubuntu/Sparkpp/cmake-build-release/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/ubuntu/Sparkpp/cmake-build-release/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="Sparkpp">
+				<Option output="/home/ubuntu/Sparkpp/cmake-build-release/Sparkpp" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/ubuntu/Sparkpp/cmake-build-release"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DBOOST_SYSTEM_DYN_LINK"/>
+					<Add option="-DBOOST_ALL_NO_LIB"/>
+					<Add option="-DBOOST_THREAD_DYN_LINK"/>
+					<Add option="-DBOOST_SERIALIZATION_DYN_LINK"/>
+					<Add directory="/home/ubuntu/Sparkpp/include"/>
+					<Add directory="/home/ubuntu/Sparkpp/capnph"/>
+					<Add directory="/home/ubuntu/Sparkpp/3rdparty"/>
+					<Add directory="/home/ubuntu/Sparkpp/3rdparty/fmt/include"/>
+					<Add directory="/home/ubuntu/Sparkpp/3rdparty/concurrentqueue"/>
+					<Add directory="/home/ubuntu/Sparkpp/3rdparty/parallel-hashmap"/>
+					<Add directory="/home/ubuntu/Sparkpp/3rdparty/abseil"/>
+					<Add directory="/home/ubuntu/Sparkpp/3rdparty/outcome"/>
+					<Add directory="/home/ubuntu/Sparkpp/3rdparty/ranges-v3/include"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/ubuntu/Sparkpp/cmake-build-release/Makefile&quot;  VERBOSE=1 Sparkpp"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/ubuntu/Sparkpp/cmake-build-release/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/ubuntu/Sparkpp/cmake-build-release/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/ubuntu/Sparkpp/cmake-build-release/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="Sparkpp/fast">
+				<Option output="/home/ubuntu/Sparkpp/cmake-build-release/Sparkpp" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/ubuntu/Sparkpp/cmake-build-release"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DBOOST_SYSTEM_DYN_LINK"/>
+					<Add option="-DBOOST_ALL_NO_LIB"/>
+					<Add option="-DBOOST_THREAD_DYN_LINK"/>
+					<Add option="-DBOOST_SERIALIZATION_DYN_LINK"/>
+					<Add directory="/home/ubuntu/Sparkpp/include"/>
+					<Add directory="/home/ubuntu/Sparkpp/capnph"/>
+					<Add directory="/home/ubuntu/Sparkpp/3rdparty"/>
+					<Add directory="/home/ubuntu/Sparkpp/3rdparty/fmt/include"/>
+					<Add directory="/home/ubuntu/Sparkpp/3rdparty/concurrentqueue"/>
+					<Add directory="/home/ubuntu/Sparkpp/3rdparty/parallel-hashmap"/>
+					<Add directory="/home/ubuntu/Sparkpp/3rdparty/abseil"/>
+					<Add directory="/home/ubuntu/Sparkpp/3rdparty/outcome"/>
+					<Add directory="/home/ubuntu/Sparkpp/3rdparty/ranges-v3/include"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/ubuntu/Sparkpp/cmake-build-release/Makefile&quot;  VERBOSE=1 Sparkpp/fast"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/ubuntu/Sparkpp/cmake-build-release/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/ubuntu/Sparkpp/cmake-build-release/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/ubuntu/Sparkpp/cmake-build-release/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/home/ubuntu/Sparkpp/cmake-build-release"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/ubuntu/Sparkpp/cmake-build-release/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/ubuntu/Sparkpp/cmake-build-release/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/ubuntu/Sparkpp/cmake-build-release/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/ubuntu/Sparkpp/cmake-build-release/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/home/ubuntu/Sparkpp/capnph/data.capnp.c++">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/aggregator.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/cache.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/cache_tracker.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/common.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/config.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/dag.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/dependency.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/env.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/executor.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/map_output_tracker.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/partition.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/partitioner.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/rdd/rdd.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/scheduler/active_job.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/scheduler/dag_scheduler.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/scheduler/scheduler.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/scheduler/stage.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/scheduler/task.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/serialize_capnp.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/serialize_wrapper.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/shuffle_fetcher.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/shuffle_manager.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/spark_context.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/spark_env.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/split.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/task_context.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/utils/event_loop.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/utils/function_signature.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/utils/macros.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/utils/match.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/utils/pair_hash.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/utils/serde.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/utils/span.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/utils/tcp.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/utils/thread_pool.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/utils/traits.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/include/utils/utils.hpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/src/cache.cpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/src/main.cpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/src/rdd/rdd.cpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/src/scheduler/dag_scheduler.cpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/src/serialize_capnp.cpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/src/serialize_wrapper.cpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/src/shuffle_fetcher.cpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/src/spark_env.cpp">
+			<Option target="Sparkpp"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/cmake/CapnProtoMacros.cmake">
+			<Option virtualFolder="CMake Files\cmake\"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/../../../usr/local/lib/cmake/CapnProto/CapnProtoConfig.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\usr\local\lib\cmake\CapnProto\"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/../../../usr/local/lib/cmake/CapnProto/CapnProtoConfigVersion.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\usr\local\lib\cmake\CapnProto\"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/../../../usr/local/lib/cmake/CapnProto/CapnProtoMacros.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\usr\local\lib\cmake\CapnProto\"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/../../../usr/local/lib/cmake/CapnProto/CapnProtoTargets.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\usr\local\lib\cmake\CapnProto\"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/../../../usr/lib/cmake/BoostDetectToolset-1.71.0.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\usr\lib\cmake\"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/../../../usr/lib/cmake/Boost-1.71.0/BoostConfig.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\usr\lib\cmake\Boost-1.71.0\"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/../../../usr/lib/cmake/Boost-1.71.0/BoostConfigVersion.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\usr\lib\cmake\Boost-1.71.0\"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/../../../usr/lib/cmake/boost_headers-1.71.0/boost_headers-config-version.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\usr\lib\cmake\boost_headers-1.71.0\"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/../../../usr/lib/cmake/boost_headers-1.71.0/boost_headers-config.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\usr\lib\cmake\boost_headers-1.71.0\"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/../../../usr/lib/cmake/boost_system-1.71.0/boost_system-config-version.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\usr\lib\cmake\boost_system-1.71.0\"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/../../../usr/lib/cmake/boost_system-1.71.0/boost_system-config.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\usr\lib\cmake\boost_system-1.71.0\"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/../../../usr/lib/cmake/boost_system-1.71.0/libboost_system-variant-shared.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\usr\lib\cmake\boost_system-1.71.0\"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/../../../usr/lib/cmake/boost_system-1.71.0/libboost_system-variant-static.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\usr\lib\cmake\boost_system-1.71.0\"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/../../../usr/lib/cmake/boost_thread-1.71.0/boost_thread-config-version.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\usr\lib\cmake\boost_thread-1.71.0\"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/../../../usr/lib/cmake/boost_thread-1.71.0/boost_thread-config.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\usr\lib\cmake\boost_thread-1.71.0\"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/../../../usr/lib/cmake/boost_thread-1.71.0/libboost_thread-variant-shared.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\usr\lib\cmake\boost_thread-1.71.0\"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/../../../usr/lib/cmake/boost_thread-1.71.0/libboost_thread-variant-static.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\usr\lib\cmake\boost_thread-1.71.0\"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/../../../usr/lib/cmake/boost_serialization-1.71.0/boost_serialization-config-version.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\usr\lib\cmake\boost_serialization-1.71.0\"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/../../../usr/lib/cmake/boost_serialization-1.71.0/boost_serialization-config.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\usr\lib\cmake\boost_serialization-1.71.0\"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/../../../usr/lib/cmake/boost_serialization-1.71.0/libboost_serialization-variant-shared.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\usr\lib\cmake\boost_serialization-1.71.0\"/>
+		</Unit>
+		<Unit filename="/home/ubuntu/Sparkpp/../../../usr/lib/cmake/boost_serialization-1.71.0/libboost_serialization-variant-static.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\usr\lib\cmake\boost_serialization-1.71.0\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>

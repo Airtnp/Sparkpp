@@ -1,0 +1,35 @@
+language: cpp
+
+compiler:
+  - gcc
+  - clang
+os:
+  - linux
+
+env:
+  - CXX=g++
+
+addons:
+  apt:
+    sources:
+      - sourceline: 'deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-9 main'
+      key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
+      - sourceline: 'ppa:ubuntu-toolchain-r/test'
+    packages:
+      - clang-9
+      - cmake
+      - gcc-9
+      - g++-9
+      - ninja-build
+
+install:
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-9" CC="gcc-9"; fi
+
+before_script:
+  - mkdir -p build && cd build
+  - cmake ..
+  - cmake --build .
+  - cd ..
+
+script:
+  - cd build && cmake --build .
