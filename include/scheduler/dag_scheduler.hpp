@@ -8,6 +8,7 @@
 #include "common.hpp"
 #include "rdd/rdd.hpp"
 #include "serialize_wrapper.hpp"
+#include "serialize_capnp.hpp"
 #include "scheduler/scheduler.hpp"
 #include "scheduler/task.hpp"
 #include "scheduler/stage.hpp"
@@ -40,11 +41,21 @@ struct TaskEndReason {
 };
 
 struct CompletionEvent {
-    Task* task;
+    unique_ptr<Task> task;
     TaskEndReason reason;
     Storage result;
+    CompletionEvent() noexcept {}
+    CompletionEvent(unique_ptr<Task>&& task_, TaskEndReason reason, Storage result) noexcept
+        : task{move(task_)}, reason{move(reason)}, result{move(result)} {}
+    CompletionEvent(CompletionEvent&& rhs) noexcept
+    : task{move(rhs.task)}, reason{move(rhs.reason)}, result{move(rhs.result)} {}
+    CompletionEvent& operator=(CompletionEvent&& rhs) noexcept {
+        task = move(rhs.task);
+        reason = move(rhs.reason);
+        result = move(rhs.result);
+        return *this;
+    }
     // accumUpdates
-    // taskInfo
 };
 
 /*
@@ -95,11 +106,9 @@ struct DAGScheduler : Scheduler {
 
     void updateCacheLocs();
 
-    template <typename F, typename T>
-    auto runJob(F&& func, RDD<T>* finalRdd, const vector<size_t>& partitions);
+    template <typename F, typename T, typename U = typename function_traits<F>::result_type>
+    vector<U> runJob(F&& func, RDD<T>* finalRdd, const vector<size_t>& partitions);
 
-    /// submit stage & missing parents
-    auto taskEnded(Task* task, TaskEndReason reason, Storage result);
 
     void visitMissingParent(unordered_set<Stage *> &missing, unordered_set<RDDBase *> &visited, RDDBase *r);
     void visitParent(unordered_set<Stage*>& parents, unordered_set<RDDBase*>& visited, RDDBase* r);
@@ -117,6 +126,8 @@ struct DAGScheduler : Scheduler {
                 unordered_map<Stage *, unordered_set<size_t>> &pendingTasks,
                 const vector<size_t> &partitions, const vector<bool> &finished, Stage *finalStage,
                 unordered_set<Stage *> waiting, unordered_set<Stage *> running, Stage *stage);
+
+    void taskEnded(unique_ptr<Task> task, TaskEndReason reason, Storage result);
 };
 
 

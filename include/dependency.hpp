@@ -6,8 +6,10 @@
 #define SPARKPP_DEPENDENCY_HPP
 
 #include "common.hpp"
+#include "serialize_wrapper.hpp"
 #include "aggregator.hpp"
 #include "partitioner.hpp"
+#include "split.hpp"
 
 struct RDDBase;
 template <typename T>
@@ -24,17 +26,15 @@ struct NarrowDependency : Dependency {
     RDDBase* rdd() const override {
         return m_rdd;
     }
-    virtual Seq<size_t> getParents(size_t partitionId) = 0;
+    virtual vector<size_t> getParents(size_t partitionId) = 0;
 };
 
 struct ShuffleDependencyBase : Dependency {
-    virtual string runShuffle(unique_ptr<Split> split, size_t partition) = 0;
+    virtual string runShuffle(RDDBase* rdd, unique_ptr<Split> split, size_t partition) = 0;
     virtual size_t shuffle_id() const = 0;
     virtual void serialize_dyn(vector<char>&) const = 0;
     virtual void deserialize_dyn(const char*&, size_t&) = 0;
 };
-
-
 
 template <typename K, typename V, typename C>
 struct ShuffleDependency : ShuffleDependencyBase {
@@ -48,16 +48,20 @@ struct ShuffleDependency : ShuffleDependencyBase {
     RDDBase* rdd() const override {
         return m_rdd;
     }
-    string runShuffle(unique_ptr<Split> split, size_t partition);
+    string runShuffle(RDDBase* rdd, unique_ptr<Split> split, size_t partition);
     size_t shuffle_id() const override {
         return shuffleId;
     }
     virtual void serialize_dyn(vector<char>& bytes) const;
+    virtual void deserialize_dyn(const char*&, size_t&);
 };
+
+ShuffleDependencyBase* dep_from_reader(::capnp::Data::Reader reader);
+
 
 struct OneToOneDependency : NarrowDependency {
     using NarrowDependency::NarrowDependency;
-    Seq<size_t> getParents(size_t partitionId) override {
+    vector<size_t> getParents(size_t partitionId) override {
         return { partitionId };
     }
 };

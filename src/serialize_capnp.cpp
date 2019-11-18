@@ -4,53 +4,64 @@
 
 #include "serialize_capnp.hpp"
 
-template <typename T>
-void sendData(int fd, ::capnp::Data::Reader reader) {
-    ::capnp::MallocMessageBuilder builder;
-    typename T::Builder data = builder.initRoot<T>();
-    data.setMsg(reader);
-    ::capnp::writeMessageToFd(fd, builder);
-}
-
-template <typename T>
-void sendData(int fd, vector<char>& bytes) {
-    ::capnp::Data::Reader reader{
-            reinterpret_cast<unsigned char*>(bytes.data()),
-            bytes.size()
-    };
-    sendData<T>(fd, reader);
-}
-
-template <typename T>
-typename ::capnp::Data::Reader recvData(int fd) {
-    ::capnp::PackedFdMessageReader message{fd};
-    typename T::Reader result = message.getRoot<T>();
-    return result.getMsg();
-}
-
-template <typename F, typename R>
-void sendTask(int fd, const F& func, const R& rdd) {
-    /*
-    ::capnp::MallocMessageBuilder builder;
-    Task::Builder task = builder.initRoot<Task>();
-    task.setFunc(func.to_reader());
-    vector<char> v;
-    rdd.serialize_dyn(v);
-    task.setRdd(::capnp::Data::Reader{
+::capnp::Data::Reader vec_to_reader(vector<char>& v) {
+    return ::capnp::Data::Reader{
             reinterpret_cast<unsigned char*>(v.data()),
             v.size()
-    });
-    ::capnp::writePackedMessageToFd(fd, builder);
-    */
+    };
 }
 
-pair<FnBase*, RDDBase*> recvTask(int fd) {
-    /*
+vector<char> reader_to_vec(::capnp::Data::Reader reader) {
+    char* bytes = reinterpret_cast<char*>(const_cast<unsigned char*>(reader.asBytes().begin()));
+    size_t size = reader.size();
+    return {
+        bytes,
+        bytes + size
+    };
+}
+
+
+void sendExecution(int fd, Task* task) {
+    ::capnp::MallocMessageBuilder builder;
+    Execution::Builder exec = builder.initRoot<Execution>();
+    if (auto rt = dynamic_cast<ResultTask*>(task)) {
+        exec.setIsShuffle(false);
+        exec.setPartitionId(rt->partition);
+        exec.setFuncOrDep(rt->func->to_reader());
+        vector<char> v;
+        rt->rdd->serialize_dyn(v);
+        exec.setRdd(vec_to_reader(v));
+    } else {
+        auto smt = dynamic_cast<ShuffleMapTask*>(task);
+        exec.setIsShuffle(true);
+        exec.setPartitionId(smt->partition);
+        vector<char> depV;
+        smt->dep->serialize_dyn(depV);
+        exec.setFuncOrDep(vec_to_reader(depV));
+        vector<char> rddV;
+        smt->rdd->serialize_dyn(rddV);
+        exec.setRdd(vec_to_reader(rddV));
+    }
+    ::capnp::writePackedMessageToFd(fd, builder);
+}
+
+unique_ptr<Task> recvExecution(int fd) {
     ::capnp::PackedFdMessageReader message{fd};
-    Task::Reader task = message.getRoot<Task>();
-    FnBase* func = fn_from_reader(task.getFunc());
-    RDDBase* rdd = rdd_from_reader(task.getRdd());
-    return make_pair(func, rdd);
-     */
+    Execution::Reader exec = message.getRoot<Execution>();
+    if (!exec.getIsShuffle()) {
+        RDDBase* rdd = rdd_from_reader(exec.getRdd());
+        FnBase* func = fn_from_reader(exec.getFuncOrDep());
+        auto task = make_unique<ResultTask>(
+            exec.getPartitionId(), rdd, func
+        );
+        return task;
+    } else {
+        RDDBase* rdd = rdd_from_reader(exec.getRdd());
+        ShuffleDependencyBase* dep = dep_from_reader(exec.getFuncOrDep());
+        auto task = make_unique<ShuffleMapTask>(
+            exec.getPartitionId(), rdd, dep
+        );
+        return task;
+    }
 }
 

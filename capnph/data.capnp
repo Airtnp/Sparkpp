@@ -3,9 +3,8 @@
 struct Execution {
     isShuffle @0: Bool;
     partitionId @1: UInt32;
-    func @2: Data;
-    rdd @3: Data;
-    dep @4: Data;
+    rdd @2: Data;
+    funcOrDep @3: Data;
 }
 
 struct Result {

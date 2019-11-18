@@ -8,8 +8,9 @@
 #include "common.hpp"
 
 struct Split {
-    int m_index;
-    virtual int index() {
+    size_t m_index;
+    Split(size_t idx) : m_index{idx} {}
+    virtual size_t index() {
         return m_index;
     }
 };

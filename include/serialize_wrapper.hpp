@@ -14,6 +14,8 @@ struct Storage {
     Storage(vector<char> v_) : v{move(v_)} {};
     Storage(const Storage& rhs) = default;
     Storage(Storage&& rhs) = default;
+    Storage& operator=(const Storage&) = default;
+    Storage& operator=(Storage&&) = default;
     // value-semantic T
     template <typename T>
     explicit operator T() {
@@ -27,6 +29,7 @@ struct Storage {
 struct IterBase {
     // FIXME: lots of virtual calling to this method to get data...
     virtual optional<Storage> next() = 0;
+    virtual bool hasNext() = 0;
     virtual ~IterBase() = default;
 };
 
@@ -45,6 +48,9 @@ struct Iterator : IterBase {
         }
         return {};
     }
+    bool hasNext() override {
+        return ptr != end;
+    }
     vector<T> collect() {
         return {ptr, end};
     }
@@ -53,10 +59,22 @@ struct Iterator : IterBase {
 /// T must be a standard container type
 template <typename T>
 struct OwnIterator : Iterator<T> {
-    T data;
+    vector<T> data;
     // @ref: https://stackoverflow.com/questions/41384793/does-stdmove-invalidate-iterators
     // move constructor will not invalidate iterators
-    OwnIterator(T data_) : Iterator<T>{data_.begin(), data_.end()}, data{move(data_)} {}
+    OwnIterator(vector<T> data_) : Iterator<T>{data_.data(), data_.data() + data_.size()}, data{move(data_)} {}
+};
+
+template <typename F, typename T>
+struct MapIterator : Iterator<T> {
+    unique_ptr<Iterator<T>> prev;
+    F func;
+    MapIterator(unique_ptr<Iterator<T>> prev, F func)
+        : Iterator<T>{prev->ptr, prev->end}, prev{move(prev)}, func{move(func)} {}
+    optional<Storage> next() override {
+        auto s = Iterator<T>::next();
+        return s.map(func);
+    }
 };
 
 
@@ -64,8 +82,12 @@ struct OwnIterator : Iterator<T> {
 
 struct FnBase {
     virtual Storage call(unique_ptr<IterBase> ib) = 0;
+    virtual ::capnp::Data::Reader to_reader() = 0;
     virtual ~FnBase() = default;
 };
+
+
+
 
 /// The wrapped function must have no reference / environment dependency (value semantics)
 template <typename F>
@@ -74,20 +96,20 @@ struct FnWrapper : FnBase {
     using FuncSig = function_traits<F>;
     // NOTE: R should be serializable and call serial() function
     using R = typename FuncSig::result_type;
-    // single input, Iterator<Ty>
-    using T = decay_t<typename FuncSig::template args<0>::type>;
+    // single input, unique_ptr<Iterator<Ty>>
+    using T = typename decay_t<typename FuncSig::template args<0>::type>::element_type;
     FnWrapper(F f_) : f{move(f_)} {};
 
     // input type could be any, but output type should be trivially_constructible
     Storage call(unique_ptr<IterBase> ib) override {
-        T* iter = static_cast<T*>(ib.get());
-        auto result = f(*iter);
+        unique_ptr<T> iter = dynamic_unique_ptr_cast<T>(move(ib));
+        auto result = f(move(iter));
         char* byteArray = reinterpret_cast<char*>(&result);
         return Storage {
             vector<char>{byteArray, byteArray + sizeof(R)}
         };
     }
-    ::capnp::Data::Reader to_reader() {
+    ::capnp::Data::Reader to_reader() override {
         return {reinterpret_cast<unsigned char*>(this), sizeof(FnWrapper)};
     }
 };

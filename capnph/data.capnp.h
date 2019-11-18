@@ -30,7 +30,7 @@ struct Execution {
   class Pipeline;
 
   struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(86ebb1259307df55, 1, 3)
+    CAPNP_DECLARE_STRUCT_HEADER(86ebb1259307df55, 1, 2)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
@@ -90,14 +90,11 @@ public:
 
   inline  ::uint32_t getPartitionId() const;
 
-  inline bool hasFunc() const;
-  inline  ::capnp::Data::Reader getFunc() const;
-
   inline bool hasRdd() const;
   inline  ::capnp::Data::Reader getRdd() const;
 
-  inline bool hasDep() const;
-  inline  ::capnp::Data::Reader getDep() const;
+  inline bool hasFuncOrDep() const;
+  inline  ::capnp::Data::Reader getFuncOrDep() const;
 
 private:
   ::capnp::_::StructReader _reader;
@@ -133,13 +130,6 @@ public:
   inline  ::uint32_t getPartitionId();
   inline void setPartitionId( ::uint32_t value);
 
-  inline bool hasFunc();
-  inline  ::capnp::Data::Builder getFunc();
-  inline void setFunc( ::capnp::Data::Reader value);
-  inline  ::capnp::Data::Builder initFunc(unsigned int size);
-  inline void adoptFunc(::capnp::Orphan< ::capnp::Data>&& value);
-  inline ::capnp::Orphan< ::capnp::Data> disownFunc();
-
   inline bool hasRdd();
   inline  ::capnp::Data::Builder getRdd();
   inline void setRdd( ::capnp::Data::Reader value);
@@ -147,12 +137,12 @@ public:
   inline void adoptRdd(::capnp::Orphan< ::capnp::Data>&& value);
   inline ::capnp::Orphan< ::capnp::Data> disownRdd();
 
-  inline bool hasDep();
-  inline  ::capnp::Data::Builder getDep();
-  inline void setDep( ::capnp::Data::Reader value);
-  inline  ::capnp::Data::Builder initDep(unsigned int size);
-  inline void adoptDep(::capnp::Orphan< ::capnp::Data>&& value);
-  inline ::capnp::Orphan< ::capnp::Data> disownDep();
+  inline bool hasFuncOrDep();
+  inline  ::capnp::Data::Builder getFuncOrDep();
+  inline void setFuncOrDep( ::capnp::Data::Reader value);
+  inline  ::capnp::Data::Builder initFuncOrDep(unsigned int size);
+  inline void adoptFuncOrDep(::capnp::Orphan< ::capnp::Data>&& value);
+  inline ::capnp::Orphan< ::capnp::Data> disownFuncOrDep();
 
 private:
   ::capnp::_::StructBuilder _builder;
@@ -372,106 +362,72 @@ inline void Execution::Builder::setPartitionId( ::uint32_t value) {
       ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
 }
 
-inline bool Execution::Reader::hasFunc() const {
-  return !_reader.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
-}
-inline bool Execution::Builder::hasFunc() {
-  return !_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
-}
-inline  ::capnp::Data::Reader Execution::Reader::getFunc() const {
-  return ::capnp::_::PointerHelpers< ::capnp::Data>::get(_reader.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-inline  ::capnp::Data::Builder Execution::Builder::getFunc() {
-  return ::capnp::_::PointerHelpers< ::capnp::Data>::get(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-inline void Execution::Builder::setFunc( ::capnp::Data::Reader value) {
-  ::capnp::_::PointerHelpers< ::capnp::Data>::set(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
-}
-inline  ::capnp::Data::Builder Execution::Builder::initFunc(unsigned int size) {
-  return ::capnp::_::PointerHelpers< ::capnp::Data>::init(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS), size);
-}
-inline void Execution::Builder::adoptFunc(
-    ::capnp::Orphan< ::capnp::Data>&& value) {
-  ::capnp::_::PointerHelpers< ::capnp::Data>::adopt(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
-}
-inline ::capnp::Orphan< ::capnp::Data> Execution::Builder::disownFunc() {
-  return ::capnp::_::PointerHelpers< ::capnp::Data>::disown(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-
 inline bool Execution::Reader::hasRdd() const {
   return !_reader.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
 inline bool Execution::Builder::hasRdd() {
   return !_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
 inline  ::capnp::Data::Reader Execution::Reader::getRdd() const {
   return ::capnp::_::PointerHelpers< ::capnp::Data>::get(_reader.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS));
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 inline  ::capnp::Data::Builder Execution::Builder::getRdd() {
   return ::capnp::_::PointerHelpers< ::capnp::Data>::get(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS));
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 inline void Execution::Builder::setRdd( ::capnp::Data::Reader value) {
   ::capnp::_::PointerHelpers< ::capnp::Data>::set(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS), value);
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
 }
 inline  ::capnp::Data::Builder Execution::Builder::initRdd(unsigned int size) {
   return ::capnp::_::PointerHelpers< ::capnp::Data>::init(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS), size);
+      ::capnp::bounded<0>() * ::capnp::POINTERS), size);
 }
 inline void Execution::Builder::adoptRdd(
     ::capnp::Orphan< ::capnp::Data>&& value) {
   ::capnp::_::PointerHelpers< ::capnp::Data>::adopt(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS), kj::mv(value));
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
 }
 inline ::capnp::Orphan< ::capnp::Data> Execution::Builder::disownRdd() {
   return ::capnp::_::PointerHelpers< ::capnp::Data>::disown(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS));
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 
-inline bool Execution::Reader::hasDep() const {
+inline bool Execution::Reader::hasFuncOrDep() const {
   return !_reader.getPointerField(
-      ::capnp::bounded<2>() * ::capnp::POINTERS).isNull();
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
 }
-inline bool Execution::Builder::hasDep() {
+inline bool Execution::Builder::hasFuncOrDep() {
   return !_builder.getPointerField(
-      ::capnp::bounded<2>() * ::capnp::POINTERS).isNull();
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
 }
-inline  ::capnp::Data::Reader Execution::Reader::getDep() const {
+inline  ::capnp::Data::Reader Execution::Reader::getFuncOrDep() const {
   return ::capnp::_::PointerHelpers< ::capnp::Data>::get(_reader.getPointerField(
-      ::capnp::bounded<2>() * ::capnp::POINTERS));
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
 }
-inline  ::capnp::Data::Builder Execution::Builder::getDep() {
+inline  ::capnp::Data::Builder Execution::Builder::getFuncOrDep() {
   return ::capnp::_::PointerHelpers< ::capnp::Data>::get(_builder.getPointerField(
-      ::capnp::bounded<2>() * ::capnp::POINTERS));
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
 }
-inline void Execution::Builder::setDep( ::capnp::Data::Reader value) {
+inline void Execution::Builder::setFuncOrDep( ::capnp::Data::Reader value) {
   ::capnp::_::PointerHelpers< ::capnp::Data>::set(_builder.getPointerField(
-      ::capnp::bounded<2>() * ::capnp::POINTERS), value);
+      ::capnp::bounded<1>() * ::capnp::POINTERS), value);
 }
-inline  ::capnp::Data::Builder Execution::Builder::initDep(unsigned int size) {
+inline  ::capnp::Data::Builder Execution::Builder::initFuncOrDep(unsigned int size) {
   return ::capnp::_::PointerHelpers< ::capnp::Data>::init(_builder.getPointerField(
-      ::capnp::bounded<2>() * ::capnp::POINTERS), size);
+      ::capnp::bounded<1>() * ::capnp::POINTERS), size);
 }
-inline void Execution::Builder::adoptDep(
+inline void Execution::Builder::adoptFuncOrDep(
     ::capnp::Orphan< ::capnp::Data>&& value) {
   ::capnp::_::PointerHelpers< ::capnp::Data>::adopt(_builder.getPointerField(
-      ::capnp::bounded<2>() * ::capnp::POINTERS), kj::mv(value));
+      ::capnp::bounded<1>() * ::capnp::POINTERS), kj::mv(value));
 }
-inline ::capnp::Orphan< ::capnp::Data> Execution::Builder::disownDep() {
+inline ::capnp::Orphan< ::capnp::Data> Execution::Builder::disownFuncOrDep() {
   return ::capnp::_::PointerHelpers< ::capnp::Data>::disown(_builder.getPointerField(
-      ::capnp::bounded<2>() * ::capnp::POINTERS));
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
 }
 
 inline bool Result::Reader::hasMsg() const {

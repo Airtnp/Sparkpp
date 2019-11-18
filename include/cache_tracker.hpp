@@ -112,7 +112,7 @@ struct CacheTracker {
     shared_mutex registeredRddIds_lck;
     unordered_set<size_t> registeredRddIds;
     std::condition_variable loading_cv;
-    shared_mutex loading_lck;
+    mutex loading_lck;
     unordered_set<pair<size_t, size_t>, pair_hash> loading;
     // per worker
     addr_t masterAddr;
@@ -123,15 +123,16 @@ struct CacheTracker {
         masterAddr.second += 1;
         if (isMaster) {
             server();
+        } else {
+            client(CacheTrackerMessage{
+                    .vmember = {
+                            CacheTrackerMessage::SlaveCacheStarted{
+                                    .host = std::getenv("SPARK_LOCAL_IP"),
+                                    .size = cache.getCapacity()
+                            }
+                    }
+            });
         }
-        client(CacheTrackerMessage{
-                .vmember = {
-                        CacheTrackerMessage::SlaveCacheStarted{
-                                .host = std::getenv("SPARK_LOCAL_IP"),
-                                .size = cache.getCapacity()
-                        }
-                }
-        });
     }
 
     void server() {
@@ -297,7 +298,7 @@ struct CacheTracker {
     template <typename T>
     auto getOrCompute(RDD<T>* rdd, unique_ptr<Split> split) -> unique_ptr<Iterator<T>> {
         auto key = make_pair(rdd->id(), split->index());
-        auto val = cache.get(key);
+        auto val = cache.get(key.first, key.second);
         if (val.is_initialized()) {
             // need a owning iterator
             vector<T> vec;
@@ -309,13 +310,14 @@ struct CacheTracker {
             return !loading.count(key);
         });
         loading.insert(key);
-        auto after_val = cache.get(key);
+        auto after_val = cache.get(key.first, key.second);
         if (after_val.is_initialized()) {
             vector<T> vec;
             deserialize(vec, after_val->v.data(), after_val->v.size());
             return make_unique<OwnIterator<T>>(move(vec));
         }
-        auto v = rdd->compute(move(split))->collect();
+        auto iter = dynamic_unique_ptr_cast<Iterator<T>>(rdd->compute(move(split)));
+        auto v = iter->collect();
         vector<char> bytes;
         serialize(v, bytes);
         cache.put(key.first, key.second, move(bytes));

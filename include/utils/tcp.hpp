@@ -6,9 +6,6 @@
 #define SPARKPP_TCP_HPP
 
 #include <boost/optional.hpp>
-#include <absl/types/span.h>
-
-using absl::Span;
 
 #ifdef __WIN32__
 #include <winsock2.h>
@@ -55,15 +52,6 @@ struct TcpStream {
     }
     TcpStream& operator=(const TcpStream&) = delete;
     TcpStream& operator=(TcpStream&&) = default;
-
-    Span<char> recv(Span<char> s, int flags = 0) {
-        int len = ::recv(fd, s.data(), s.length(), flags);
-        return Span<char>(s.data(), len);
-    }
-
-    int send(Span<char> s, int flags = 0) {
-        return ::send(fd, s.data(), s.length(), flags);
-    }
 
     ~TcpStream() {
 #ifdef __WIN32__

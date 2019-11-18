@@ -21,6 +21,7 @@
 
 struct SparkContext;
 
+// FIXME: currently all data in a RDD is passed (like Spark-0.5 does)
 // FIXME: do we really need boost::serializaton + capnproto? (replace everything with boost only)
 /// For non-trivial objects, we store them into pimpl mode + boost::serialization.
 /// Since C++ has no support for `mem::forget`, \
@@ -31,101 +32,60 @@ struct SparkContext;
 struct RDDBase {
     virtual size_t id() = 0;
     virtual unique_ptr<IterBase> compute(unique_ptr<Split> split) = 0;
-    virtual const vector<Partition>& getPartitions() = 0;
+    virtual unique_ptr<IterBase> iterator(unique_ptr<Split> split) = 0;
+    // virtual vector<Partition> getPartitions() = 0;
     virtual void serialize_dyn(vector<char>&) const = 0;
     virtual void deserialize_dyn(const char*&, size_t&) = 0;
     virtual size_t numOfSplits() = 0;
-    virtual vector<unique_ptr<Split>> splits() = 0;
+    // virtual vector<unique_ptr<Split>> splits() = 0;
+    virtual unique_ptr<Split> split(size_t partitionId) = 0;
     virtual span<Dependency*> dependencies() = 0;
-};
-
-struct MockRDD : RDDBase {
-    struct MockRDDData {
-        vector<int> v;
-    };
-    unique_ptr<MockRDDData> pimpl;
-    vector<Partition> t;
-    unique_ptr<IterBase> compute(unique_ptr<Split> split) override {
-        return make_unique<Iterator<int>>(pimpl->v.data(), pimpl->v.data() + pimpl->v.size());
-    }
-    // useless
-    const vector<Partition>& getPartitions() override {
-        return t;
-    }
-    void serialize_dyn(vector<char>& bytes) const override {
-        bytes.resize(sizeof(MockRDD));
-        memcpy(bytes.data(), reinterpret_cast<const char*>(this), sizeof(MockRDD));
-
-        boost::iostreams::back_insert_device<vector<char>> sink{bytes};
-        boost::iostreams::stream<boost::iostreams::back_insert_device<vector<char>>> s{sink};
-        boost::archive::binary_oarchive oa{s};
-        oa << pimpl->v;
-        s.flush();
-    }
-    void deserialize_dyn(const char*& bytes, size_t& size) override {
-        bytes += sizeof(MockRDD);
-        size -= sizeof(MockRDD);
-
-        boost::iostreams::basic_array_source<char> device{bytes, size};
-        boost::iostreams::stream<boost::iostreams::basic_array_source<char>> s{device};
-        boost::archive::binary_iarchive ia{s};
-        pimpl = make_unique<MockRDDData>();
-        ia >> pimpl->v;
-    }
 };
 
 RDDBase* rdd_from_reader(::capnp::Data::Reader reader);
 
 // Transformations
 
-template <typename T, typename U, typename F>
-struct MapPartitionRDD;
-
-template <typename T, typename U, typename F>
-struct FlatMapPartitionRDD;
-
+template <typename T, typename F>
+struct MappedRDD;
 
 
 template <typename T>
 struct RDD : RDDBase {
     SparkContext& sc;
     vector<Dependency*> deps;
-    int m_id;
+    size_t m_id;
+    bool shouldCache = false;
 
     RDD(SparkContext& sc_);
+    size_t id() override {
+        return m_id;
+    }
+    RDD& cache() {
+        shouldCache = true;
+        return *this;
+    }
 
-    unique_ptr<Iterator<T>> compute(unique_ptr<Split> split) override = 0;
+    unique_ptr<IterBase> compute(unique_ptr<Split> split) override = 0;
+    unique_ptr<IterBase> iterator(unique_ptr<Split> split) override;
 
     span<Dependency*> dependencies() override {
         return make_span(deps);
-    }
-
-    virtual optional<Partitioner*> getPartitioner() {
-        return {};
     }
 
     // TODO: persist, cache, unpersist, storageLevel
 
     // Transformations, Lazy
 
-    template <Invocable<T> F, typename U = std::invoke_result_t<F, T>>
-    auto map(F f) -> MapPartitionRDD<T, U, F> {
-        return MapPartitionRDD{*this, f};
-    }
-
-    template <Invocable<T> F, typename SU = std::invoke_result_t<F, T>,
-            typename U = typename SU::value_type>
-    auto flat_map(F f) -> MapPartitionRDD<T, U, F> {
-        return FlatMapPartitionRDD{*this, f};
-    }
+    template <Invocable<T> F>
+    auto map(F f) -> MappedRDD<T, F>;
 
     // Actions, Eager
 
-    // TODO: complete actions
-    template <Fn<T, T, T> F>
-    auto reduce(F f) -> optional<T> {
-        return {};
-    }
+    template <typename F>
+    T reduce(F&& f);
+
+    auto collect();
 };
 
 

@@ -14,6 +14,7 @@
 #include "utils/pair_hash.hpp"
 #include "utils/serde.hpp"
 #include "utils/span.hpp"
+#include "utils/ptr_cast.hpp"
 
 #include "utils/macros.hpp"
 

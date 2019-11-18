@@ -64,7 +64,7 @@ CXXFLAGS    = $(CXXWFLAGS) $(CXXNFLAGS) $(CXXSTD)
 
 * Boost
 * - Serialization
-* - Outcome
+* - Asio
 * Cap'n Proto
 
 ## Installation
@@ -79,13 +79,11 @@ export SPARK_LOCAL_IP=<local ip>
 ./bin/start_slave.sh
 ```
 
-Set environment variable "SPARK_LOCAL_IP"
-
-
-
 
 
 ## Reference
 
 * [Spark: Cluster Computing with Working Sets](https://www.usenix.org/legacy/event/hotcloud10/tech/full_papers/Zaharia.pdf)
 * [Resilient Distributed Datasets: A Fault-Tolerant Abstraction for In-Memory Cluster Computing](https://www.usenix.org/system/files/conference/nsdi12/nsdi12-final138.pdf)
+* [Spark-0.5](https://github.com/apache/spark/tree/branch-0.5)
+* [native_spark](https://github.com/rajasekarv/native_spark)

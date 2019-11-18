@@ -88,6 +88,7 @@ using std::cerr;
 using std::clog;
 
 #include <algorithm>
+#include <numeric>
 
 using std::copy_n;
 using std::remove_if;
@@ -103,11 +104,6 @@ using namespace std::chrono_literals;
 
 #include "utils/utils.hpp"
 
-#include "absl/types/span.h"
-#include "absl/container/btree_map.h"
-#include "absl/container/btree_set.h"
-using absl::btree_map;
-using absl::btree_set;
 
 #include "concurrentqueue/blockingconcurrentqueue.h"
 
@@ -127,6 +123,7 @@ using host_t = string;
 using boost::optional;
 using boost::variant;
 
+#include <fmt/format.h>
 
 
 

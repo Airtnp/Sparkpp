@@ -3,100 +3,9 @@
 //
 
 #include "common.hpp"
+#include "serialize_capnp.hpp"
 #include "scheduler/dag_scheduler.hpp"
 #include "spark_env.hpp"
-
-
-template<typename F, typename T>
-auto DAGScheduler::runJob(F &&func, RDD<T> *finalRdd, const vector<size_t>& partitions) {
-    using U = typename function_traits<F>::result_type;
-    size_t numFinished = 0;
-    unordered_set<Stage*> waiting;
-    unordered_set<Stage*> running;
-    unordered_set<Stage*> failed;
-    unordered_map<Stage*, unordered_set<size_t>> pendingTasks;
-    size_t lastFetchFailureTime = 0;
-    size_t runId = nextRunId.fetch_add(1);
-    size_t numOutputParts = partitions.size();
-    auto finalStage = newStage(finalRdd, {});
-    vector<U> results(numOutputParts);
-    vector<bool> finished(numOutputParts);
-    FnWrapper funcWrapper{func};
-
-    updateCacheLocs();
-    eventQueues[runId];
-
-    submitStage(runId, finalRdd, funcWrapper,
-            pendingTasks, partitions, finished, finalStage.get(), waiting, running, finalStage.get());
-    while (numFinished != numOutputParts) {
-        CompletionEvent event;
-        bool v = eventQueues[runId].wait_dequeue_timed(event, 500ms);
-
-        if (v) {
-            auto stage = idToStage[event.task->stage_id()];
-            pendingTasks[stage.get()].erase(event.task->task_id());
-            match(event.reason.get(),
-                [&](const TaskEndReason::Success&) {
-                    if (auto rt = dynamic_cast<ResultTask*>(event.task)) {
-                        U result;
-                        deserialize(result, event.result.to_reader());
-                        results[rt->outputId] = move(result);
-                        finished[rt->outputId] = true;
-                        numFinished += 1;
-                    } else {
-                        auto smt = dynamic_cast<ShuffleMapTask*>(event.task);
-                        auto stage = idToStage[smt->stageId];
-                        string result{event.result.v.begin(), event.result.v.end()};
-                        stage->addOutputLoc(smt->partition, result);
-                        if (running.count(stage.get()) && pendingTasks[stage.get()].empty()) {
-                            running.erase(stage.get());
-                            if (stage->shuffleDep.is_initialized()) {
-                                vector<host_t> locs;
-                                for (auto& v: stage->outputLocs) {
-                                    locs.push_back(v[0]);
-                                }
-                                env.mapOutputTracker->registerMapOutputs(
-                                        stage->shuffleDep.value()->shuffle_id(), locs);
-                            }
-                            updateCacheLocs();
-                            vector<Stage*> newlyRunnable;
-                            for (auto& s : waiting) {
-                                if (getMissingParentStages(*s).empty()) {
-                                    newlyRunnable.push_back(s);
-                                }
-                            }
-                            for (auto& s : newlyRunnable) {
-                                waiting.erase(s);
-                                running.insert(s);
-                            }
-                            for (auto& s : newlyRunnable) {
-                                submitMissingTasks(
-                                        runId, finalRdd, &funcWrapper,
-                                        pendingTasks, partitions, finished,
-                                        s, finalStage.get());
-                            }
-                        }
-                    }
-                },
-                [&](const TaskEndReason::FetchFailed& f) {
-                    // TODO: handle failure
-                    ;
-                }
-            );
-        }
-        // TODO: handle resubmit timeout
-        if (!failed.empty()) {
-            updateCacheLocs();
-            for (auto ps : failed) {
-                submitStage(runId, finalRdd, funcWrapper,
-                            pendingTasks, partitions, finished, finalStage.get(), waiting, running, ps);
-            }
-            failed.clear();
-        }
-    }
-    eventQueues.erase(runId);
-    return results;
-}
 
 shared_ptr<Stage> DAGScheduler::newStage(RDDBase *rdd, optional<ShuffleDependencyBase*> shuffleDep) {
     env.cacheTracker->registerRDD(rdd->id(), rdd->numOfSplits());
@@ -210,10 +119,19 @@ void DAGScheduler::submitTasks(unique_ptr<Task> task) {
     auto [host, port] = address.back();
     address.pop_back();
     address.insert(address.begin(), make_pair(host, port));
-    boost::asio::post(pool, [host = host, port = port, task = move(task)]() {
+    boost::asio::post(pool, [this, host = host, port = port, task = move(task)]() mutable {
         auto opt_st = TcpStream::connect(host.c_str(), port);
-        // TODO: complete this after all serialization finished.
-        // sendTask(opt_st->fd, task->)
+        sendExecution(opt_st->fd, task.get());
+        auto reader = recvData<Result>(opt_st->fd);
+        Storage s{reader_to_vec(reader)};
+        size_t runId = task->run_id();
+        // FIXME: dispatch to taskEnded
+        CompletionEvent event {
+            move(task),
+            {TaskEndReason::Success{}},
+            move(s)
+        };
+        eventQueues[runId].enqueue(move(event));
     });
 }
 
@@ -221,13 +139,13 @@ void DAGScheduler::updateCacheLocs() {
     cacheLocs = env.cacheTracker->getLocationsSnapshot();
 }
 
-auto DAGScheduler::taskEnded(Task* task, TaskEndReason reason, Storage result) {
+void DAGScheduler::taskEnded(unique_ptr<Task> task, TaskEndReason reason, Storage result) {
     size_t id = task->run_id();
     if (eventQueues[id].size_approx() != 0) {
         eventQueues[id].enqueue(CompletionEvent{
-            .task = move(task),
-            .reason = move(reason),
-            .result = move(result)
+            move(task),
+            move(reason),
+            move(result)
         });
     }
 }
