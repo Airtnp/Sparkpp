@@ -21,19 +21,16 @@ void sendData(int fd, ::capnp::Data::Reader reader);
 template <typename T>
 void sendData(int fd, vector<char>& bytes);
 
-template <typename T>
-typename ::capnp::Data::Reader recvData(int fd);
-
 void sendExecution(int fd, Task* task);
 
-unique_ptr<Task> recvExecution(int fd);
+unique_ptr<Task> recvExecution(::capnp::PackedFdMessageReader& message);
 
 template <typename T>
 void sendData(int fd, ::capnp::Data::Reader reader) {
     ::capnp::MallocMessageBuilder builder;
     typename T::Builder data = builder.initRoot<T>();
     data.setMsg(reader);
-    ::capnp::writeMessageToFd(fd, builder);
+    ::capnp::writePackedMessageToFd(fd, builder);
 }
 
 template <typename T>
@@ -46,8 +43,7 @@ void sendData(int fd, vector<char>& bytes) {
 }
 
 template <typename T>
-typename ::capnp::Data::Reader recvData(int fd) {
-    ::capnp::PackedFdMessageReader message{fd};
+typename ::capnp::Data::Reader recvData(::capnp::PackedFdMessageReader& message) {
     typename T::Reader result = message.getRoot<T>();
     return result.getMsg();
 }

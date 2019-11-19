@@ -11,6 +11,7 @@
 #include "serialize_wrapper.hpp"
 #include "serialize_capnp.hpp"
 #include "rdd/rdd.hpp"
+#include <boost/asio.hpp>
 #include <boost/asio/thread_pool.hpp>
 #include <boost/asio/post.hpp>
 #include "data.capnp.h"
@@ -24,15 +25,20 @@ struct Executor {
     Executor(pair<string, uint16_t> masterAddress_, uint16_t port_)
         : masterAddress{move(masterAddress_)}, port{port_} {}
     void run() {
-        auto conn = TcpListener::bind(port);
+        io_service ioc;
+        ip::tcp::endpoint endpoint{ip::tcp::v4(), port};
+        ip::tcp::acceptor acceptor{ioc, endpoint};
         while (true) {
-            auto st = conn.accept();
-            post(pool, [st = move(st)]() {
+            ip::tcp::socket socket{ioc};
+            acceptor.accept(socket);
+            post(pool, [socket = move(socket)]() mutable {
                 // read & serialize
-                auto task = recvExecution(st.fd);
+                int fd = socket.native_handle();
+                ::capnp::PackedFdMessageReader message{fd};
+                auto task = recvExecution(message);
                 auto s = task->run(0);
                 // write result back
-                sendData<Result>(st.fd, s.v);
+                sendData<Result>(fd, s.v);
             });
         }
     }

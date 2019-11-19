@@ -87,7 +87,8 @@ struct FnBase {
 };
 
 
-
+template <typename T>
+void serialize(const T& v, vector<char>& bytes);
 
 /// The wrapped function must have no reference / environment dependency (value semantics)
 template <typename F>
@@ -104,10 +105,9 @@ struct FnWrapper : FnBase {
     Storage call(unique_ptr<IterBase> ib) override {
         unique_ptr<T> iter = dynamic_unique_ptr_cast<T>(move(ib));
         auto result = f(move(iter));
-        char* byteArray = reinterpret_cast<char*>(&result);
-        return Storage {
-            vector<char>{byteArray, byteArray + sizeof(R)}
-        };
+        vector<char> bytes;
+        serialize(result, bytes);
+        return Storage{move(bytes)};
     }
     ::capnp::Data::Reader to_reader() override {
         return {reinterpret_cast<unsigned char*>(this), sizeof(FnWrapper)};

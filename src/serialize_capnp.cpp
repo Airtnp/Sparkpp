@@ -45,8 +45,7 @@ void sendExecution(int fd, Task* task) {
     ::capnp::writePackedMessageToFd(fd, builder);
 }
 
-unique_ptr<Task> recvExecution(int fd) {
-    ::capnp::PackedFdMessageReader message{fd};
+unique_ptr<Task> recvExecution(::capnp::PackedFdMessageReader& message) {
     Execution::Reader exec = message.getRoot<Execution>();
     if (!exec.getIsShuffle()) {
         RDDBase* rdd = rdd_from_reader(exec.getRdd());

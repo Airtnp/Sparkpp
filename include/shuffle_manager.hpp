@@ -29,13 +29,11 @@ struct ShuffleManager {
         fs::create_directories(localDir);
         fs::create_directories(shuffleDir);
         char* localIp = std::getenv("SPARK_LOCAL_IP");
-        serverUri = fmt::format("http://{}:{}", localIp, 35080);
+        serverUri = fmt::format("http://{}:{}", localIp, 28001);
         thread thd{[localDir = localDir]() {
-            char* localIp = std::getenv("SPARK_LOCAL_IP");
-            const auto address = net::ip::make_address(localIp);
-            uint16_t port = 35080;
+            uint16_t port = 28001;
             net::io_context ioc;
-            tcp::acceptor acceptor{ioc, {address, port}};
+            tcp::acceptor acceptor{ioc, {ip::tcp::v4(), port}};
             while (true) {
                 tcp::socket socket{ioc};
                 acceptor.accept(socket);

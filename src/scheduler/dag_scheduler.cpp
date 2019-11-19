@@ -13,7 +13,7 @@ shared_ptr<Stage> DAGScheduler::newStage(RDDBase *rdd, optional<ShuffleDependenc
         env.mapOutputTracker->registerShuffle(shuffleDep.value()->shuffle_id(), rdd->numOfSplits());
     }
     size_t id = nextStageId.fetch_add(1);
-    idToStage[id] = make_shared<Stage>(id, rdd, shuffleDep.value(), getParentStages(rdd));
+    idToStage[id] = std::make_shared<Stage>(id, rdd, shuffleDep, getParentStages(rdd));
     return idToStage[id];
 }
 
@@ -120,9 +120,29 @@ void DAGScheduler::submitTasks(unique_ptr<Task> task) {
     address.pop_back();
     address.insert(address.begin(), make_pair(host, port));
     boost::asio::post(pool, [this, host = host, port = port, task = move(task)]() mutable {
-        auto opt_st = TcpStream::connect(host.c_str(), port);
-        sendExecution(opt_st->fd, task.get());
-        auto reader = recvData<Result>(opt_st->fd);
+        io_service ioc;
+        ip::tcp::resolver resolver{ioc};
+        ip::tcp::resolver::query query{host, std::to_string(port)};
+        auto iter = resolver.resolve(query);
+        ip::tcp::resolver::iterator end;
+        ip::tcp::endpoint endpoint = *iter;
+        ip::tcp::socket socket{ioc};
+        boost::system::error_code ec;
+        do {
+            auto start_iter = iter;
+            ec.clear();
+            socket.close();
+            std::this_thread::sleep_for(5ms);
+            while (start_iter != end) {
+                socket.connect(endpoint, ec);
+                if (!ec) break;
+                ++start_iter;
+            }
+        } while (ec);
+        int fd = socket.native_handle();
+        sendExecution(fd, task.get());
+        ::capnp::PackedFdMessageReader message{fd};
+        auto reader = recvData<Result>(message);
         Storage s{reader_to_vec(reader)};
         size_t runId = task->run_id();
         // FIXME: dispatch to taskEnded
@@ -202,20 +222,4 @@ vector<host_t> DAGScheduler::getPreferredLocs(RDDBase* rdd, size_t partitionId) 
     }
     return {};
 }
-
-
-
-
-/*
-void DAGEventLoop::onReceive(DAGSchedulerEvent event) {
-    event.match(
-        [this](const DAGSchedulerEvent::JobSubmitted& e) {
-            dagScheduler.handleJobSubmitted(e);
-        },
-        [this](const DAGSchedulerEvent::CompletionEvent& e) {
-            dagScheduler.handleTaskCompletion(e);
-        }
-    );
-}
-*/
 

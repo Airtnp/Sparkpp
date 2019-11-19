@@ -72,13 +72,15 @@ struct TcpListener {
     uint16_t port;
     sockaddr_in addr;
     static TcpListener bind(uint16_t port, uint16_t bufferSize = 10) {
+        int option = 1;
         int sockfd = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (const char*)&option, sizeof(option));
         sockaddr_in addr{
             .sin_family = AF_INET,
             .sin_port = htons(port)
         };
         addr.sin_addr.s_addr = htonl(INADDR_ANY);
-        ::bind(sockfd, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in));
+        [[maybe_unused]] int success = ::bind(sockfd, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in));
         ::listen(sockfd, bufferSize);
 
 #ifdef __WIN32__

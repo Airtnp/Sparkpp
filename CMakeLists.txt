@@ -1,5 +1,3 @@
-include("${CMAKE_CURRENT_LIST_DIR}/cmake/CapnProtoMacros.cmake")
-
 cmake_minimum_required(VERSION 3.0)
 project(Sparkpp)
 

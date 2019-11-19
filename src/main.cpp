@@ -11,10 +11,14 @@
 SparkEnv env;
 
 int main(int argc, char** argv) {
-    env.init(argc, argv, make_pair("127.0.0.1", 30001));
-    auto sc = SparkContext{argc, argv};
+    addr_t masterAddr = make_pair("18.188.215.139", 25544);
+    vector<addr_t> slaveAddrs = {
+            {"18.218.54.64", 24456}
+    };
+    env.init(argc, argv, masterAddr);
+    auto sc = SparkContext{argc, argv, masterAddr, slaveAddrs};
     vector<int> values = {1, 2, 3, 4, 5, 6, 7};
-    auto rdd = sc.parallelize(values, 1);
+    auto rdd = sc.parallelize(values, 3);
     auto v = rdd.reduce([](int x, int y) {
         return x + y;
     });

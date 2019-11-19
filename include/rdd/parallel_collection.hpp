@@ -70,6 +70,7 @@ struct ParallelCollection : RDD<T> {
     void deserialize_dyn(const char*& bytes, size_t& size) {
         bytes += sizeof(ParallelCollection);
         size -= sizeof(ParallelCollection);
+        pimpl.release();
         pimpl = make_unique<PCVal>();
         DeserialGuard gd{bytes, size};
         gd >> *pimpl;

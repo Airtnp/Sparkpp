@@ -60,7 +60,7 @@ void ParallelShuffleFetcher::fetch(size_t shuffleId, size_t reduceId, F &&func) 
                     net::io_context ioc;
                     tcp::resolver resolver{ioc};
                     beast::tcp_stream stream{ioc};
-                    tcp::resolver::query query{host, "35080"};
+                    tcp::resolver::query query{host, "28001"};
                     const auto results = resolver.resolve(query);
                     stream.connect(results);
 

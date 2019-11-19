@@ -80,7 +80,8 @@ template <typename VT, typename F, typename ...Fs, typename R = typename functio
 R match(VT&& v, F&& f, Fs&&... fs) {
     using GI = GetIndex<std::decay_t<VT>, std::decay_t<F>>;
     using T = typename GI::arg_t;
-    if (v.which() == GI::value) {
+    int index = GI::value;
+    if (v.which() == index) {
         return std::invoke(std::forward<F>(f), std::forward<T>(boost::get<T>(std::forward<VT>(v))));
     }
     return match(std::forward<VT>(v), std::forward<Fs>(fs)...);

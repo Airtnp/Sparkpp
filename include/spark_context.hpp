@@ -53,26 +53,27 @@ struct SparkContext {
         return nextShuffleId.fetch_add(1);
     }
 
-    SparkConfig getConfig(char** argv) {
+    SparkConfig getConfig(char** argv, addr_t masterAddr, vector<addr_t> slaveAddrs) {
         auto ty = string{argv[1]};
         if (ty == "master") {
             return SparkConfig{
                     SparkContextType::Distributed,
                     SparkDistributeType::Master,
-                    30001,
-                    {{"127.0.0.1", 27001}}
+                    masterAddr.second,
+                    move(slaveAddrs)
             };
         } else {
             return SparkConfig{
                     SparkContextType::Distributed,
                     SparkDistributeType::Slave,
-                    27001,
-                    {{"localhost", 30001}}
+                    slaveAddrs[0].second,
+                    {move(masterAddr)}
             };
         }
     }
 
-    SparkContext(int argc, char** argv) : config{getConfig(argv)}, scheduler{config.addr} {
+    SparkContext(int argc, char** argv, addr_t masterAddr, vector<addr_t> slaveAddrs)
+        : config{getConfig(argv, move(masterAddr), move(slaveAddrs))}, scheduler{config.addr} {
         switch (config.mode) {
             case SparkContextType::Distributed: {
                 switch (config.type) {

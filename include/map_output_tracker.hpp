@@ -7,6 +7,9 @@
 
 #include "common.hpp"
 #include "serialize_capnp.hpp"
+#include <boost/asio.hpp>
+
+using namespace boost::asio;
 
 struct MapOutputTracker {
     bool isMaster;
@@ -27,19 +30,24 @@ struct MapOutputTracker {
     void server() {
         thread thd{
                 [this]() {
-                    auto listener = TcpListener::bind(masterAddr.second);
+                    io_service ioc;
+                    ip::tcp::endpoint endpoint{ip::tcp::v4(), masterAddr.second};
+                    ip::tcp::acceptor acceptor{ioc, endpoint};
                     while (true) {
-                        auto st = listener.accept();
+                        ip::tcp::socket socket{ioc};
+                        acceptor.accept(socket);
                         thread per_conn{
-                                [this, st = move(st)]() {
-                                    auto result = recvData<Message>(st.fd);
+                                [this, socket = move(socket)]() mutable {
+                                    int fd = socket.native_handle();
+                                    ::capnp::PackedFdMessageReader message{fd};
+                                    auto result = recvData<Message>(message);
                                     size_t shuffleId;
                                     deserialize(shuffleId, result);
                                     if (server_urls.find(shuffleId) != server_urls.end()) {
                                         auto v = server_urls[shuffleId];
                                         vector<char> bytes;
                                         serialize(v, bytes);
-                                        sendData<Message>(st.fd, bytes);
+                                        sendData<Message>(fd, bytes);
                                     }
                                 }
                         };
@@ -51,15 +59,31 @@ struct MapOutputTracker {
     }
 
     vector<string> client(size_t shuffleId) {
-        auto opt_st = TcpStream::connect(masterAddr.first.c_str(), masterAddr.second);
+        io_service ioc;
+        ip::tcp::resolver resolver{ioc};
+        ip::tcp::resolver::query query{masterAddr.first, std::to_string(masterAddr.second)};
+        auto iter = resolver.resolve(query);
+        ip::tcp::resolver::iterator end;
+        ip::tcp::endpoint endpoint = *iter;
+        ip::tcp::socket socket{ioc};
+        boost::system::error_code ec;
         do {
-            opt_st = TcpStream::connect(masterAddr.first.c_str(), masterAddr.second);
-        } while (!opt_st.is_initialized());
-        auto st = move(opt_st.value());
+            auto start_iter = iter;
+            ec.clear();
+            socket.close();
+            std::this_thread::sleep_for(5ms);
+            while (start_iter != end) {
+                socket.connect(endpoint, ec);
+                if (!ec) break;
+                ++start_iter;
+            }
+        } while (ec);
+        int fd = socket.native_handle();
         vector<char> bytes;
         serialize(shuffleId, bytes);
-        sendData<Message>(st.fd, bytes);
-        auto reader = recvData<Message>(st.fd);
+        sendData<Message>(fd, bytes);
+        ::capnp::PackedFdMessageReader message{fd};
+        auto reader = recvData<Message>(message);
         vector<string> res;
         deserialize(res, reader);
         return res;
