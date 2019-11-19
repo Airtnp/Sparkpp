@@ -14,6 +14,10 @@ struct Storage {
     Storage(vector<char> v_) : v{move(v_)} {};
     Storage(const Storage& rhs) = default;
     Storage(Storage&& rhs) = default;
+    template <typename T>
+    Storage(const T& data) : v{
+        reinterpret_cast<const char*>(&data),
+        reinterpret_cast<const char*>(&data) + sizeof(T)} {}
     Storage& operator=(const Storage&) = default;
     Storage& operator=(Storage&&) = default;
     // value-semantic T
@@ -65,15 +69,34 @@ struct OwnIterator : Iterator<T> {
     OwnIterator(vector<T> data_) : Iterator<T>{data_.data(), data_.data() + data_.size()}, data{move(data_)} {}
 };
 
-template <typename F, typename T>
+template <typename T, typename F>
 struct MapIterator : Iterator<T> {
-    unique_ptr<Iterator<T>> prev;
+    unique_ptr<IterBase> prev;
     F func;
     MapIterator(unique_ptr<Iterator<T>> prev, F func)
         : Iterator<T>{prev->ptr, prev->end}, prev{move(prev)}, func{move(func)} {}
     optional<Storage> next() override {
         auto s = Iterator<T>::next();
-        return s.map(func);
+        return s.map([func = func](Storage &st) {
+            return Storage{func(static_cast<T>(st))};
+        });
+    }
+};
+
+template <typename K, typename V, typename F>
+struct MapValueIterator : Iterator<pair<K, V>> {
+    unique_ptr<Iterator<pair<K, V>>> prev;
+    F func;
+    MapValueIterator(unique_ptr<Iterator<pair<K, V>>> p, F f)
+            : Iterator<pair<K, V>>{prev->ptr, prev->end}, prev{move(p)}, func{move(f)} {}
+    optional<Storage> next() override {
+        auto s = Iterator<pair<K, V>>::next();
+        if (!s.is_initialized()) {
+            return {};
+        }
+        auto p = static_cast<pair<K, V>>(s);
+        auto q = make_pair(move(p.first), func(move(p.second)));
+        return {q};
     }
 };
 

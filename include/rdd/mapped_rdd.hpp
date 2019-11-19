@@ -15,7 +15,8 @@ struct MappedRDD : RDD<T> {
     RDD<T>* prev;
     F func;
     OneToOneDependency dep;
-    MappedRDD(RDD<T>* p_, F f_) : RDD<T>{prev->sc}, prev{p_}, f{move(f_)}, dep{p_} {}
+    Dependency* depP;
+    MappedRDD(RDD<T>* p_, F f_) : RDD<T>{p_->sc}, prev{p_}, func{move(f_)}, dep{p_}, depP{&dep} {}
     size_t numOfSplits() override {
         return prev->numOfSplits();
     }
@@ -23,15 +24,12 @@ struct MappedRDD : RDD<T> {
         return prev->split(partitionId);
     }
     span<Dependency*> dependencies() override {
-        span<Dependency*> span {
-            .ptr = &dep,
-            .len = 1
-        };
+        return make_span<Dependency*>(&depP, 1);
     };
 
     unique_ptr<IterBase> compute(unique_ptr<Split> split) {
-        return make_unique<MapIterator>(
-            prev->iterator(move(split)),
+        return make_unique<MapIterator<T, F>>(
+            dynamic_unique_ptr_cast<Iterator<T>>(prev->iterator(move(split))),
             func
         );
     };
@@ -43,13 +41,12 @@ struct MappedRDD : RDD<T> {
         prev->serialize_dyn(bytes);
     };
 
-    void deserialize_dyn(const char*&, size_t&) {
+    void deserialize_dyn(const char*& bytes, size_t& size) {
         bytes += sizeof(MappedRDD);
         size -= sizeof(MappedRDD);
         prev = reinterpret_cast<RDD<T>*>(const_cast<char*>(bytes));
         prev->deserialize_dyn(bytes, size);
     };
-
 };
 
 

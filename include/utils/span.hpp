@@ -19,5 +19,10 @@ auto make_span(C& c) {
     };
 }
 
+template <typename T>
+auto make_span(T* ptr, size_t len) {
+    return span<T>{ptr, len};
+}
+
 
 #endif //SPARKPP_SPAN_HPP

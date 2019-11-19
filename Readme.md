@@ -71,13 +71,20 @@ CXXFLAGS    = $(CXXWFLAGS) $(CXXNFLAGS) $(CXXSTD)
 
 ```shell script
 ./bin/prepare.sh
-./bin/gen_capnp.sh
 export SPARK_LOCAL_IP=<local ip>
 # master
 ./bin/start_master.sh
 # slave
 ./bin/start_slave.sh
 ```
+
+## Development (Clion)
+
+* Toolchains -> Add remote host (set IP)
+* Cmake -> Add build option (set environment variable, IP)
+* Deployment -> Set mapping (/home/ubuntu/Sparkpp)
+* Start Sparkpp-slave | Debug-slave1, Sparkpp-slave | Debug-slave2, ...
+* Start Sparkpp | Debug
 
 
 

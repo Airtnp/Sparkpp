@@ -7,6 +7,8 @@
 #include "scheduler/dag_scheduler.hpp"
 #include "spark_env.hpp"
 
+
+
 shared_ptr<Stage> DAGScheduler::newStage(RDDBase *rdd, optional<ShuffleDependencyBase*> shuffleDep) {
     env.cacheTracker->registerRDD(rdd->id(), rdd->numOfSplits());
     if (shuffleDep.is_initialized()) {
@@ -141,6 +143,7 @@ void DAGScheduler::submitTasks(unique_ptr<Task> task) {
         } while (ec);
         int fd = socket.native_handle();
         sendExecution(fd, task.get());
+        // TODO: add failure handling
         ::capnp::PackedFdMessageReader message{fd};
         auto reader = recvData<Result>(message);
         Storage s{reader_to_vec(reader)};

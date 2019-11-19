@@ -49,6 +49,8 @@ RDDBase* rdd_from_reader(::capnp::Data::Reader reader);
 template <typename T, typename F>
 struct MappedRDD;
 
+template <typename K, typename V, typename F>
+struct PairRDD;
 
 template <typename T>
 struct RDD : RDDBase {
@@ -76,9 +78,22 @@ struct RDD : RDDBase {
     // TODO: persist, cache, unpersist, storageLevel
 
     // Transformations, Lazy
+    // HACK: this requires lifetime to continue. better use `enable_shared_from_this` + `shared_from_this`
+    // But this will cause extra overhead in type serialization & type system
+    // Currently every RDD<T> should live long through the program.
 
-    template <Invocable<T> F>
-    auto map(F f) -> MappedRDD<T, F>;
+    // Invocable<T> F
+    template <typename F>
+    auto map(F f) -> MappedRDD<T, F> {
+        return MappedRDD{this, move(f)};
+    }
+
+    template <typename F,
+            typename R = typename function_traits<F>::result_type,
+            typename K = typename R::first_type, typename V = typename R::second_type>
+    auto mapPair(F f) -> PairRDD<K, V, F> {
+        return PairRDD{this, move(f)};
+    }
 
     // Actions, Eager
 
@@ -87,6 +102,9 @@ struct RDD : RDDBase {
 
     auto collect();
 };
+
+#include "rdd/mapped_rdd.hpp"
+#include "rdd/pair_rdd.hpp"
 
 
 #endif //SPARKPP_RDD_HPP

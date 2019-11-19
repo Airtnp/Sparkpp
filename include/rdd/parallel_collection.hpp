@@ -59,6 +59,7 @@ struct ParallelCollection : RDD<T> {
         return make_unique<OwnIterator<T>>(move(pcSplit->values));
     };
 
+    // TODO: only serialize partitionId part
     void serialize_dyn(vector<char>& bytes) const {
         size_t oldSize = bytes.size();
         bytes.resize(oldSize + sizeof(ParallelCollection));
