@@ -45,7 +45,7 @@ struct ResultTask : Task {
     ResultTask(size_t tid, size_t rid, size_t sid, RDDBase* r, FnBase* f, size_t pid, vector<host_t> l, size_t oid)
         : taskId{tid}, runId{rid}, stageId{sid}, rdd{r}, func{f}, partition{pid}, locs{move(l)}, outputId{oid} {}
     Storage run(size_t attemptId) {
-        unique_ptr<Split> split = move(rdd->split(partition));
+        unique_ptr<Split> split = rdd->split(partition);
         return func->call(rdd->compute(move(split)));
     }
     vector<host_t> preferredLocations() override {

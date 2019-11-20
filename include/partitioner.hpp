@@ -23,7 +23,7 @@ struct HashPartitioner : Partitioner {
     }
     size_t getPartition(const any& key) const {
         auto v = std::any_cast<K>(key);
-        return std::hash<K>(v) % partitions;
+        return std::hash<K>{}(v) % partitions;
     }
     void serialize_dyn(vector<char>& bytes) const override {
         size_t oldSize = bytes.size();

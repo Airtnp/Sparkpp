@@ -46,11 +46,11 @@ RDDBase* rdd_from_reader(::capnp::Data::Reader reader);
 
 // Transformations
 
-template <typename T, typename F>
+template <typename T, typename U, typename F>
 struct MappedRDD;
 
-template <typename K, typename V, typename F>
-struct PairRDD;
+template <typename T, typename K, typename V, typename F>
+struct MapPairRDD;
 
 template <typename T>
 struct RDD : RDDBase {
@@ -75,7 +75,7 @@ struct RDD : RDDBase {
         return make_span(deps);
     }
 
-    // TODO: persist, cache, unpersist, storageLevel
+    // TODO: persist, unpersist, storageLevel
 
     // Transformations, Lazy
     // HACK: this requires lifetime to continue. better use `enable_shared_from_this` + `shared_from_this`
@@ -83,24 +83,25 @@ struct RDD : RDDBase {
     // Currently every RDD<T> should live long through the program.
 
     // Invocable<T> F
-    template <typename F>
-    auto map(F f) -> MappedRDD<T, F> {
-        return MappedRDD{this, move(f)};
+    template <typename F, typename U = typename function_traits<F>::result_type>
+    auto map(F f) -> MappedRDD<T, U, F> {
+        return MappedRDD<T, U, F>{this, move(f)};
     }
 
     template <typename F,
             typename R = typename function_traits<F>::result_type,
             typename K = typename R::first_type, typename V = typename R::second_type>
-    auto mapPair(F f) -> PairRDD<K, V, F> {
-        return PairRDD{this, move(f)};
+    auto mapPair(F f) -> MapPairRDD<T, K, V, F> {
+        return MapPairRDD<T, K, V, F>{this, move(f)};
     }
 
     // Actions, Eager
 
+    // Invocable<T, T>
     template <typename F>
     T reduce(F&& f);
 
-    auto collect();
+    vector<T> collect();
 };
 
 #include "rdd/mapped_rdd.hpp"

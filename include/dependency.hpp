@@ -40,8 +40,8 @@ template <typename K, typename V, typename C>
 struct ShuffleDependency : ShuffleDependencyBase {
     size_t shuffleId;
     RDDBase* m_rdd;
-    unique_ptr<Partitioner> partitioner;
-    unique_ptr<AggregatorBase> aggregator;
+    Partitioner* partitioner;
+    AggregatorBase* aggregator;
     ShuffleDependency(size_t shuffleId_, RDDBase* rdd_,
             Partitioner* partitioner_, AggregatorBase* aggregator_)
         : shuffleId{shuffleId_}, m_rdd{rdd_}, partitioner{partitioner_}, aggregator{aggregator_} {}

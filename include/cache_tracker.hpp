@@ -126,16 +126,15 @@ struct CacheTracker {
         masterAddr.second += 1;
         if (isMaster) {
             server();
-        } else {
-            client(CacheTrackerMessage{
-                    .vmember = {
-                            CacheTrackerMessage::SlaveCacheStarted{
-                                    .host = std::getenv("SPARK_LOCAL_IP"),
-                                    .size = cache.getCapacity()
-                            }
-                    }
-            });
         }
+        client(CacheTrackerMessage{
+                .vmember = {
+                        CacheTrackerMessage::SlaveCacheStarted{
+                                .host = std::getenv("SPARK_LOCAL_IP"),
+                                .size = cache.getCapacity()
+                        }
+                }
+        });
     }
 
     void server() {

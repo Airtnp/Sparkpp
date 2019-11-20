@@ -55,7 +55,7 @@ struct Iterator : IterBase {
     bool hasNext() override {
         return ptr != end;
     }
-    vector<T> collect() {
+    virtual vector<T> collect() {
         return {ptr, end};
     }
 };
@@ -69,34 +69,77 @@ struct OwnIterator : Iterator<T> {
     OwnIterator(vector<T> data_) : Iterator<T>{data_.data(), data_.data() + data_.size()}, data{move(data_)} {}
 };
 
-template <typename T, typename F>
-struct MapIterator : Iterator<T> {
+template <typename T, typename U, typename F>
+struct MapIterator : Iterator<U> {
     unique_ptr<IterBase> prev;
     F func;
     MapIterator(unique_ptr<Iterator<T>> prev, F func)
-        : Iterator<T>{prev->ptr, prev->end}, prev{move(prev)}, func{move(func)} {}
+        : Iterator<U>{nullptr, nullptr}, prev{move(prev)}, func{move(func)} {}
     optional<Storage> next() override {
-        auto s = Iterator<T>::next();
-        return s.map([func = func](Storage &st) {
-            return Storage{func(static_cast<T>(st))};
+        auto s = prev->next();
+        return s.map([func = func](Storage st) {
+            U r = invoke(move(func), move(static_cast<T>(st)));
+            return Storage{move(r)};
         });
+    }
+    bool hasNext() override {
+        return prev->hasNext();
+    }
+    vector<U> collect() override {
+        vector<U> res;
+        while (hasNext()) {
+            res.push_back(static_cast<U>(next().value()));
+        }
+        return res;
     }
 };
 
-template <typename K, typename V, typename F>
-struct MapValueIterator : Iterator<pair<K, V>> {
+template <typename K, typename V, typename U, typename F>
+struct MapValueIterator : Iterator<pair<K, U>> {
     unique_ptr<Iterator<pair<K, V>>> prev;
     F func;
     MapValueIterator(unique_ptr<Iterator<pair<K, V>>> p, F f)
-            : Iterator<pair<K, V>>{prev->ptr, prev->end}, prev{move(p)}, func{move(f)} {}
+            : Iterator<pair<K, U>>{nullptr, nullptr}, prev{move(p)}, func{move(f)} {}
     optional<Storage> next() override {
-        auto s = Iterator<pair<K, V>>::next();
+        auto s = prev->next();
         if (!s.is_initialized()) {
             return {};
         }
         auto p = static_cast<pair<K, V>>(s);
         auto q = make_pair(move(p.first), func(move(p.second)));
         return {q};
+    }
+    bool hasNext() override {
+        return prev->hasNext();
+    }
+    vector<pair<K, U>> collect() override {
+        vector<pair<K, U>> res;
+        while (hasNext()) {
+            res.push_back(static_cast<pair<K, U>>(next().value()));
+        }
+        return res;
+    }
+};
+
+template <typename K, typename C>
+struct HashIterator : Iterator<pair<K, C>> {
+    unordered_map<K, C> combiners;
+    using iter_t = typename unordered_map<K, C>::iterator;
+    iter_t iter;
+    iter_t end;
+    HashIterator(unordered_map<K, C> m)
+        : Iterator<pair<K, C>>{nullptr, nullptr}, combiners{move(m)},
+        iter{m.begin()}, end{m.end()} {}
+    bool hasNext() override {
+        return iter != end;
+    }
+    optional<Storage> next() override {
+        auto v = *iter;
+        ++iter;
+        return Storage{v};
+    }
+    vector<pair<K, C>> collect() override {
+        return {std::make_move_iterator(iter), std::make_move_iterator(end)};
     }
 };
 

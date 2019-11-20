@@ -10,13 +10,13 @@
 #include "serialize_wrapper.hpp"
 #include "serialize_capnp.hpp"
 
-template <typename T, typename F>
-struct MappedRDD : RDD<T> {
+template <typename T, typename U, typename F>
+struct MappedRDD : RDD<U> {
     RDD<T>* prev;
     F func;
     OneToOneDependency dep;
     Dependency* depP;
-    MappedRDD(RDD<T>* p_, F f_) : RDD<T>{p_->sc}, prev{p_}, func{move(f_)}, dep{p_}, depP{&dep} {}
+    MappedRDD(RDD<T>* p_, F f_) : RDD<U>{p_->sc}, prev{p_}, func{move(f_)}, dep{p_}, depP{&dep} {}
     size_t numOfSplits() override {
         return prev->numOfSplits();
     }
@@ -28,7 +28,7 @@ struct MappedRDD : RDD<T> {
     };
 
     unique_ptr<IterBase> compute(unique_ptr<Split> split) {
-        return make_unique<MapIterator<T, F>>(
+        return make_unique<MapIterator<T, U, F>>(
             dynamic_unique_ptr_cast<Iterator<T>>(prev->iterator(move(split))),
             func
         );

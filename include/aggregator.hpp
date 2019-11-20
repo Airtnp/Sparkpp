@@ -30,15 +30,23 @@ struct Aggregator : AggregatorBase {
     /// C, C -> C
     mergeCombiners_t f_mergeCombiners;
 
+    Aggregator(createCombiner_t cc, mergeValue_t mv, mergeCombiners_t mc)
+        : f_createCombiner{cc}, f_mergeValue{mv}, f_mergeCombiners{mc} {}
+
     // FIXME: how to fix copy overhead here?
     any createCombiner(any x) override {
-        return f_createCombiner(move(x));
+        auto v = std::any_cast<V>(move(x));
+        return f_createCombiner(move(v));
     }
     any mergeValue(any c, any v) override {
-        return f_mergeValue(move(c), move(v));
+        auto x1 = std::any_cast<C>(move(c));
+        auto x2 = std::any_cast<V>(move(v));
+        return f_mergeValue(move(x1), move(x2));
     }
     any mergeCombiners(any c1, any c2) override {
-        return f_mergeCombiners(move(c1), move(c2));
+        auto x1 = std::any_cast<C>(move(c1));
+        auto x2 = std::any_cast<C>(move(c2));
+        return f_mergeCombiners(move(x1), move(x2));
     }
 
     void serialize_dyn(vector<char>& bytes) const override {

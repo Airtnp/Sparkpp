@@ -24,9 +24,23 @@ int main(int argc, char** argv) {
     auto rdd2 = rdd.map([](int x) {
         return x + 1;
     });
-    auto v = rdd2.reduce([](int x, int y) {
-        return x + y;
+    auto rdd3 = rdd2.map([](int x) {
+        return x - 1;
     });
-    std::cout << v << '\n';
+    auto rdd4 = rdd3.mapPair([](int x) {
+        return make_pair(x % 2, x);
+    });
+    // (1, 3, 5, 7) | (2, 4, 6)
+    auto rdd5 = rdd4.groupByKey(2);
+    // 16 | 12
+    auto rdd7 = rdd5.map([](pair<int, vector<int>> x) -> int {
+        int acc = 0;
+        for (auto i : x.second) {
+            acc += i;
+        }
+        return acc;
+    });
+    auto v = rdd7.collect();
+    std::cout << v[0] << v[1] << '\n';
     return 0;
 }
