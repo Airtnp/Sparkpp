@@ -21,6 +21,7 @@ struct HashPartitioner : Partitioner {
     size_t numPartitions() const {
         return partitions;
     }
+    // FIXME: is there a way to fix this any? using pointer?
     size_t getPartition(const any& key) const {
         auto v = std::any_cast<K>(key);
         return std::hash<K>{}(v) % partitions;

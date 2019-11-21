@@ -24,7 +24,7 @@ struct SparkContext;
 // FIXME: currently all data in a RDD is passed (like Spark-0.5 does)
 // FIXME: do we really need boost::serializaton + capnproto? (replace everything with boost only)
 /// For non-trivial objects, we store them into pimpl mode + boost::serialization.
-/// Since C++ has no support for `mem::forget`, \
+/// Since C++ has no support for `mem::forget`,
 /// we need to place objects like `std::vector` to pimpl to avoid undefined destructors.
 /// Fortunately, the size of pimpl objects are usually small, since they don't store value inside them.
 /// For trivial objects, just directly copy based on class bytes.

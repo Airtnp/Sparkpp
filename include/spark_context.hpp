@@ -72,7 +72,7 @@ struct SparkContext {
         }
     }
 
-    SparkContext(int argc, char** argv, addr_t masterAddr, vector<addr_t> slaveAddrs)
+    SparkContext([[maybe_unused]] int argc, char** argv, addr_t masterAddr, vector<addr_t> slaveAddrs)
         : config{getConfig(argv, move(masterAddr), move(slaveAddrs))}, scheduler{config.addr} {
         switch (config.mode) {
             case SparkContextType::Distributed: {

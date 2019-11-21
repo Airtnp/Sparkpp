@@ -27,8 +27,7 @@ static auto wsa_init = []() {
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
-// TODO: handle errors
-// TODO: replace to boost tcp connection
+
 struct TcpStream {
     int fd;
     static boost::optional<TcpStream> connect(const char* addr, uint16_t port) {

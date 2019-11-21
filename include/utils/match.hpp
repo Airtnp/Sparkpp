@@ -66,7 +66,7 @@ struct GetIndex<boost::variant<Args...>, F> {
     constexpr static const int value = TypeIndex_v<TypeList<Args...>, arg_t>;
 };
 
-// FIXME: add a fallback option
+/// Fallback option
 template <typename VT, typename F, typename R = typename function_traits<F>::result_type>
 R match(VT&& v, F&& f) {
     using GI = GetIndex<std::decay_t<VT>, std::decay_t<F>>;
@@ -75,7 +75,6 @@ R match(VT&& v, F&& f) {
 }
 
 /// We need to dynamically match serialized variant, not statically call visitors
-/// The base case compiles so the return type must be default-constructible
 template <typename VT, typename F, typename ...Fs, typename R = typename function_traits<F>::result_type>
 R match(VT&& v, F&& f, Fs&&... fs) {
     using GI = GetIndex<std::decay_t<VT>, std::decay_t<F>>;

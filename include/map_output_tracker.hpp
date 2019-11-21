@@ -103,7 +103,7 @@ struct MapOutputTracker {
 
     void registerMapOutput(size_t shuffleId, size_t mapId, string uri) {
         auto& v = server_urls[shuffleId];
-        /// FIXME: lock each vector?
+        // FIXME: lock each vector?
         v[mapId] = move(uri);
     }
 
@@ -111,8 +111,8 @@ struct MapOutputTracker {
         server_urls[shuffleId] = move(locs);
     }
 
-    void unregisterMapOutput(size_t shuffleId, int mapId, string uri) {
-        // assert(server_urls.find(shuffleId) != server_urls.end())
+    void unregisterMapOutput(size_t shuffleId, int mapId, [[maybe_unused]] string uri) {
+        // assert(server_urls.find(shuffleId) == server_urls.end())
         auto& v = server_urls[shuffleId];
         v[mapId].clear();
         increaseGeneration();

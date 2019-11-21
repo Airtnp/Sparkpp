@@ -7,10 +7,8 @@ set (CXX_EXTRA_FLAGS
         -fconcepts
         -Wno-missing-field-initializers
         -Wno-comment
-        -Wno-unused-parameter
         -lboost_serialization
 ") # G++ 9.2 in MSYS2 cannot support -fcoroutines...
-# TODO: remove -Wno-unused-parameter
 add_definitions(${CXX_EXTRA_FLAGS})
 # configure_file()
 
