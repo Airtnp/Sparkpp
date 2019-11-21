@@ -57,7 +57,7 @@ void DAGScheduler::submitMissingTasks(
         FnBase* func,
         unordered_map<Stage*, unordered_set<size_t>>& pendingTasks,
         const vector<size_t>& partitions,
-        const vector<bool>& finished,
+        vector<bool>& finished,
         Stage* stage, Stage* finalStage) {
     auto& pending = pendingTasks[stage];
     size_t numOutputParts = partitions.size();
@@ -95,9 +95,9 @@ void DAGScheduler::submitStage(
         size_t runId, RDDBase *finalRdd, FnBase *func,
         unordered_map<Stage *, unordered_set<size_t>>& pendingTasks,
         const vector<size_t>& partitions,
-        const vector<bool>& finished, Stage *finalStage,
-        unordered_set<Stage*> waiting,
-        unordered_set<Stage*> running,
+        vector<bool>& finished, Stage *finalStage,
+        unordered_set<Stage*>& waiting,
+        unordered_set<Stage*>& running,
         Stage* stage
         ) {
     if (!waiting.count(stage) && !running.count(stage)) {
@@ -124,7 +124,8 @@ void DAGScheduler::submitTasks(unique_ptr<Task> task) {
     boost::asio::post(pool, [this, host = host, port = port, task = move(task)]() mutable {
         io_service ioc;
         ip::tcp::resolver resolver{ioc};
-        ip::tcp::resolver::query query{host, std::to_string(port)};
+        ip::tcp::resolver::query query{host, std::to_string(port),
+                                       boost::asio::ip::resolver_query_base::numeric_service};
         auto iter = resolver.resolve(query);
         ip::tcp::resolver::iterator end;
         ip::tcp::endpoint endpoint = *iter;

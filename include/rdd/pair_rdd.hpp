@@ -81,7 +81,7 @@ struct MapPairRDD : PairRDD<K, V> {
         return make_span<Dependency*>(&depP, 1);
     };
 
-    unique_ptr<IterBase> compute(unique_ptr<Split> split) {
+    unique_ptr<Iterator<pair<K, V>>> compute(unique_ptr<Split> split) {
         return make_unique<MapIterator<T, pair_t, F>>(
                 dynamic_unique_ptr_cast<Iterator<T>>(prev->iterator(move(split))),
                 func
@@ -125,7 +125,7 @@ struct MappedValuesRDD : PairRDD<K, U> {
     span<Dependency*> dependencies() override {
         return make_span<Dependency*>(&depP, 1);
     };
-    unique_ptr<IterBase> compute(unique_ptr<Split> split) {
+    unique_ptr<Iterator<pair<K, U>>> compute(unique_ptr<Split> split) {
         return make_unique<MapValueIterator<K, V, U, F>>(
                 dynamic_unique_ptr_cast<Iterator<pair<K, V>>>(prev->iterator(move(split))),
                 func
@@ -168,7 +168,7 @@ struct ShuffleRDD : PairRDD<K, C> {
     span<Dependency*> dependencies() override {
         return make_span<Dependency*>(&depP, 1);
     };
-    unique_ptr<IterBase> compute(unique_ptr<Split> split);
+    unique_ptr<Iterator<pair<K, C>>> compute(unique_ptr<Split> split);
 
     void serialize_dyn(vector<char>& bytes) const {
         size_t oldSize = bytes.size();
@@ -188,8 +188,9 @@ struct ShuffleRDD : PairRDD<K, C> {
         parent->deserialize_dyn(bytes, size);
         // plain type
         aggregator.release();
-        aggregator.reset(reinterpret_cast<AggregatorBase*>(const_cast<char*>(bytes)));
-        aggregator->deserialize_dyn(bytes, size);
+        auto aggr = reinterpret_cast<AggregatorBase*>(const_cast<char*>(bytes));
+        aggr->deserialize_dyn(bytes, size);
+        aggregator.reset(aggr);
     };
 };
 

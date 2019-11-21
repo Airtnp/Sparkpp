@@ -35,7 +35,7 @@ void ParallelShuffleFetcher::fetch(size_t shuffleId, size_t reduceId, F &&func) 
         inputsByUri[uris[i]].push_back(i);
     }
     // # of threads fetching blocks
-    size_t parallelFetches = 10;
+    size_t parallelFetches = 4;
     BlockingConcurrentQueue<pair<string, vector<size_t>>> serverQueue;
     for (const auto& [k, v] : inputsByUri) {
         serverQueue.enqueue(make_pair(k, v));
@@ -47,7 +47,10 @@ void ParallelShuffleFetcher::fetch(size_t shuffleId, size_t reduceId, F &&func) 
         post(pool, [&]() {
             while (true) {
                 pair<string, vector<size_t>> p;
-                serverQueue.wait_dequeue(p);
+                auto found = serverQueue.try_dequeue(p);
+                if (!found) {
+                    break;
+                }
                 auto& host = p.first;
                 auto& ids = p.second;
                 for (int inputId : ids) {
@@ -56,7 +59,8 @@ void ParallelShuffleFetcher::fetch(size_t shuffleId, size_t reduceId, F &&func) 
                     net::io_context ioc;
                     tcp::resolver resolver{ioc};
                     beast::tcp_stream stream{ioc};
-                    tcp::resolver::query query{host, "28001"};
+                    tcp::resolver::query query{host, "28001",
+                                               boost::asio::ip::resolver_query_base::numeric_service};
                     const auto results = resolver.resolve(query);
                     stream.connect(results);
 
@@ -73,11 +77,13 @@ void ParallelShuffleFetcher::fetch(size_t shuffleId, size_t reduceId, F &&func) 
                     beast::error_code ec;
                     stream.socket().shutdown(tcp::socket::shutdown_both, ec);
                     vector<pair<K, V>> data;
-                    boost::iostreams::basic_array_source<char> device{
-                            req.body().data(), req.body().size()
+                    // FIXME: lots of copies here
+                    string body{
+                        boost::asio::buffers_begin(res.body().data()),
+                        boost::asio::buffers_end(res.body().data())
                     };
-                    boost::iostreams::stream<boost::iostreams::basic_array_source<char>> s{device};
-                    boost::archive::binary_iarchive ia{s};
+                    std::stringstream ss{move(body)};
+                    boost::archive::binary_iarchive ia{ss};
                     ia >> data;
                     resultQueue.enqueue(move(data));
                 }

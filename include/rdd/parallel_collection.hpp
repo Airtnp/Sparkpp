@@ -31,6 +31,7 @@ struct ParallelCollection : RDD<T> {
     };
     unique_ptr<PCVal> pimpl;
     size_t numSlices;
+    mutable size_t serialSize = 0;
     ParallelCollection(SparkContext& sc, vector<T> data, size_t n) : RDD<T>{sc}, numSlices{n} {
         auto splits = slice(data, n);
         pimpl = make_unique<PCVal>(move(data), move(splits));
@@ -54,18 +55,26 @@ struct ParallelCollection : RDD<T> {
         return make_unique<ParallelCollectionSplit<T>>(
                 partitionId, this->m_id, pimpl->splits[partitionId]);
     }
-    unique_ptr<IterBase> compute(unique_ptr<Split> split) {
+    unique_ptr<Iterator<T>> compute(unique_ptr<Split> split) {
         auto pcSplit = dynamic_unique_ptr_cast<ParallelCollectionSplit<T>>(move(split));
         return make_unique<OwnIterator<T>>(move(pcSplit->values));
     };
 
     // TODO: only serialize partitionId part
     void serialize_dyn(vector<char>& bytes) const {
+        vector<char> pbytes;
+        {
+            SerialGuard gd{pbytes};
+            gd << *pimpl;
+        }
+        // NOTE: record size here to dynamically adjust byte offset
+        serialSize = pbytes.size();
         size_t oldSize = bytes.size();
         bytes.resize(oldSize + sizeof(ParallelCollection));
         memcpy(bytes.data() + oldSize, reinterpret_cast<const char*>(this), sizeof(ParallelCollection));
-        SerialGuard gd{bytes};
-        gd << *pimpl;
+        bytes.insert(bytes.end(),
+                std::make_move_iterator(pbytes.begin()),
+                std::make_move_iterator(pbytes.end()));
     };
 
     void deserialize_dyn(const char*& bytes, size_t& size) {
@@ -75,6 +84,8 @@ struct ParallelCollection : RDD<T> {
         pimpl = make_unique<PCVal>();
         DeserialGuard gd{bytes, size};
         gd >> *pimpl;
+        bytes += serialSize;
+        size -= serialSize;
     };
 };
 

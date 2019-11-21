@@ -9,9 +9,9 @@
 #include "serialize_wrapper.hpp"
 
 struct AggregatorBase {
-    virtual any createCombiner(any) = 0;
-    virtual any mergeValue(any, any) = 0;
-    virtual any mergeCombiners(any, any) = 0;
+    virtual void* createCombiner() = 0;
+    virtual void* mergeValue() = 0;
+    virtual void* mergeCombiners() = 0;
     virtual void serialize_dyn(vector<char>& bytes) const = 0;
     virtual void deserialize_dyn(const char*&, size_t&) = 0;
 };
@@ -33,20 +33,14 @@ struct Aggregator : AggregatorBase {
     Aggregator(createCombiner_t cc, mergeValue_t mv, mergeCombiners_t mc)
         : f_createCombiner{cc}, f_mergeValue{mv}, f_mergeCombiners{mc} {}
 
-    // FIXME: how to fix copy overhead here?
-    any createCombiner(any x) override {
-        auto v = std::any_cast<V>(move(x));
-        return f_createCombiner(move(v));
+    void* createCombiner() override {
+        return (void*)f_createCombiner;
     }
-    any mergeValue(any c, any v) override {
-        auto x1 = std::any_cast<C>(move(c));
-        auto x2 = std::any_cast<V>(move(v));
-        return f_mergeValue(move(x1), move(x2));
+    void* mergeValue() override {
+        return (void*)f_mergeValue;
     }
-    any mergeCombiners(any c1, any c2) override {
-        auto x1 = std::any_cast<C>(move(c1));
-        auto x2 = std::any_cast<C>(move(c2));
-        return f_mergeCombiners(move(x1), move(x2));
+    void* mergeCombiners() override {
+        return (void*)f_mergeCombiners;
     }
 
     void serialize_dyn(vector<char>& bytes) const override {

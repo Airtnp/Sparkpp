@@ -31,55 +31,59 @@ struct Storage {
 };
 
 struct IterBase {
-    // FIXME: lots of virtual calling to this method to get data...
-    virtual optional<Storage> next() = 0;
-    virtual bool hasNext() = 0;
     virtual ~IterBase() = default;
 };
 
-/// `slice::Iter`
 template <typename T>
 struct Iterator : IterBase {
+    // FIXME: lots of virtual calling to this method to get data...
+    virtual optional<T> next() = 0;
+    virtual bool hasNext() = 0;
+    virtual vector<T> collect() = 0;
+};
+
+
+/// `slice::Iter`
+template <typename T>
+struct SliceIter : Iterator<T> {
     const T* ptr;
     const T* end;
-    Iterator(const T* p, const T* e) : ptr{p}, end{e} {};
-    optional<Storage> next() override {
+    SliceIter(const T* p, const T* e) : ptr{p}, end{e} {};
+    optional<T> next() override {
         if (ptr != end) {
-            auto pv = reinterpret_cast<const char*>(ptr);
-            vector<char> v{pv, pv + sizeof(T)};
+            T v = *ptr;
             ++ptr;
-            return {Storage{move(v)}};
+            return {v};
         }
         return {};
     }
     bool hasNext() override {
         return ptr != end;
     }
-    virtual vector<T> collect() {
+    vector<T> collect() override {
         return {ptr, end};
     }
 };
 
 /// T must be a standard container type
 template <typename T>
-struct OwnIterator : Iterator<T> {
+struct OwnIterator : SliceIter<T> {
     vector<T> data;
     // @ref: https://stackoverflow.com/questions/41384793/does-stdmove-invalidate-iterators
     // move constructor will not invalidate iterators
-    OwnIterator(vector<T> data_) : Iterator<T>{data_.data(), data_.data() + data_.size()}, data{move(data_)} {}
+    OwnIterator(vector<T> data_) : SliceIter<T>{data_.data(), data_.data() + data_.size()}, data{move(data_)} {}
 };
 
 template <typename T, typename U, typename F>
 struct MapIterator : Iterator<U> {
-    unique_ptr<IterBase> prev;
+    unique_ptr<Iterator<T>> prev;
     F func;
     MapIterator(unique_ptr<Iterator<T>> prev, F func)
-        : Iterator<U>{nullptr, nullptr}, prev{move(prev)}, func{move(func)} {}
-    optional<Storage> next() override {
+        : prev{move(prev)}, func{move(func)} {}
+    optional<U> next() override {
         auto s = prev->next();
-        return s.map([func = func](Storage st) {
-            U r = invoke(move(func), move(static_cast<T>(st)));
-            return Storage{move(r)};
+        return s.map([func = func](T t) {
+            return invoke(move(func), move(t));
         });
     }
     bool hasNext() override {
@@ -88,7 +92,7 @@ struct MapIterator : Iterator<U> {
     vector<U> collect() override {
         vector<U> res;
         while (hasNext()) {
-            res.push_back(static_cast<U>(next().value()));
+            res.push_back(move(next().value()));
         }
         return res;
     }
@@ -99,15 +103,14 @@ struct MapValueIterator : Iterator<pair<K, U>> {
     unique_ptr<Iterator<pair<K, V>>> prev;
     F func;
     MapValueIterator(unique_ptr<Iterator<pair<K, V>>> p, F f)
-            : Iterator<pair<K, U>>{nullptr, nullptr}, prev{move(p)}, func{move(f)} {}
-    optional<Storage> next() override {
+            : prev{move(p)}, func{move(f)} {}
+    optional<pair<K, U>> next() override {
         auto s = prev->next();
         if (!s.is_initialized()) {
             return {};
         }
-        auto p = static_cast<pair<K, V>>(s);
-        auto q = make_pair(move(p.first), func(move(p.second)));
-        return {q};
+        auto p = move(s.value());
+        return make_pair(move(p.first), func(move(p.second)));
     }
     bool hasNext() override {
         return prev->hasNext();
@@ -115,7 +118,7 @@ struct MapValueIterator : Iterator<pair<K, U>> {
     vector<pair<K, U>> collect() override {
         vector<pair<K, U>> res;
         while (hasNext()) {
-            res.push_back(static_cast<pair<K, U>>(next().value()));
+            res.push_back(move(next().value()));
         }
         return res;
     }
@@ -128,15 +131,19 @@ struct HashIterator : Iterator<pair<K, C>> {
     iter_t iter;
     iter_t end;
     HashIterator(unordered_map<K, C> m)
-        : Iterator<pair<K, C>>{nullptr, nullptr}, combiners{move(m)},
-        iter{m.begin()}, end{m.end()} {}
+        : combiners{move(m)},
+        iter{combiners.begin()}, end{combiners.end()} {}
     bool hasNext() override {
         return iter != end;
     }
-    optional<Storage> next() override {
+    optional<pair<K, C>> next() override {
+        if (iter == end) {
+            return {};
+        }
         auto v = *iter;
+        pair<K, C> p = make_pair(move(v.first), move(v.second));
         ++iter;
-        return Storage{v};
+        return p;
     }
     vector<pair<K, C>> collect() override {
         return {std::make_move_iterator(iter), std::make_move_iterator(end)};
@@ -167,7 +174,7 @@ struct FnWrapper : FnBase {
     using T = typename decay_t<typename FuncSig::template args<0>::type>::element_type;
     FnWrapper(F f_) : f{move(f_)} {};
 
-    // input type could be any, but output type should be trivially_constructible
+    // input type could be any, but output type should be serializable
     Storage call(unique_ptr<IterBase> ib) override {
         unique_ptr<T> iter = dynamic_unique_ptr_cast<T>(move(ib));
         auto result = f(move(iter));

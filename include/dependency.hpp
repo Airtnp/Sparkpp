@@ -39,10 +39,10 @@ struct ShuffleDependencyBase : Dependency {
 template <typename K, typename V, typename C>
 struct ShuffleDependency : ShuffleDependencyBase {
     size_t shuffleId;
-    RDDBase* m_rdd;
+    RDD<pair<K, V>>* m_rdd;
     Partitioner* partitioner;
     AggregatorBase* aggregator;
-    ShuffleDependency(size_t shuffleId_, RDDBase* rdd_,
+    ShuffleDependency(size_t shuffleId_, RDD<pair<K, V>>* rdd_,
             Partitioner* partitioner_, AggregatorBase* aggregator_)
         : shuffleId{shuffleId_}, m_rdd{rdd_}, partitioner{partitioner_}, aggregator{aggregator_} {}
     RDDBase* rdd() const override {

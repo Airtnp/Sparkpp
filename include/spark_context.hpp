@@ -234,11 +234,13 @@ RDD<T>::RDD(SparkContext &sc_) : sc{sc_} {
 }
 
 template<typename T>
-unique_ptr<IterBase> RDD<T>::iterator(unique_ptr<Split> split) {
+Iterator<T>* RDD<T>::iterator_impl(unique_ptr<Split> split) {
     if (shouldCache) {
-        return env.cacheTracker->getOrCompute(this, move(split));
+        auto p = env.cacheTracker->getOrCompute(this, move(split));
+        return p.release();
     } else {
-        return compute(move(split));
+        auto p = compute(move(split));
+        return p.release();
     }
 }
 
@@ -251,18 +253,20 @@ vector<T> RDD<T>::collect() {
         }
         return result;
     };
-    return flatten(move(sc.runJob(this, move(cf))));
+    auto v = sc.runJob(this, move(cf));
+    return flatten(move(v));
 }
 
 template<typename K, typename V, typename C>
-unique_ptr<IterBase> ShuffleRDD<K, V, C>::compute(unique_ptr<Split> split) {
+unique_ptr<Iterator<pair<K, C>>> ShuffleRDD<K, V, C>::compute(unique_ptr<Split> split) {
     unordered_map<K, C> combiners;
     auto mergePair = [&](pair<K, C> c) {
         if (!combiners.count(c.first)) {
             combiners.insert(move(c));
         } else {
-            combiners[c.first] = std::any_cast<C>(aggregator->mergeCombiners(
-                    combiners[c.first], move(c.second)));
+            using mc_t = C(*)(C, C);
+            auto f_mc = reinterpret_cast<mc_t>(aggregator->mergeCombiners());
+            combiners[c.first] = f_mc(move(combiners[c.first]), move(c.second));
         }
     };
     env.shuffleFetcher->fetch(dep.shuffleId, split->m_index, move(mergePair));
@@ -278,7 +282,8 @@ template<typename K, typename V, typename C>
 string ShuffleDependency<K, V, C>::runShuffle(RDDBase* rdd, unique_ptr<Split> split, size_t partition) {
     size_t numOutputSplits = partitioner->numPartitions();
     vector<unordered_map<K, C>> buckets{numOutputSplits};
-    auto iter = rdd->compute(move(split));
+    auto* rddkv = dynamic_cast<RDD<pair<K, V>>*>(rdd);
+    auto iter = rddkv->compute(move(split));
     while (true) {
         auto s = iter->next();
         if (!s.is_initialized()) {
@@ -288,9 +293,13 @@ string ShuffleDependency<K, V, C>::runShuffle(RDDBase* rdd, unique_ptr<Split> sp
         auto bucketId = partitioner->getPartition(p.first);
         auto& bucket = buckets[bucketId];
         if (!bucket.count(p.first)) {
-            bucket[p.first] = std::any_cast<C>(move(aggregator->createCombiner(move(p.second))));
+            using fcc_t = C(*)(V);
+            auto f_cc = reinterpret_cast<fcc_t>(aggregator->createCombiner());
+            bucket[p.first] = f_cc(move(p.second));
         } else {
-            bucket[p.first] = std::any_cast<C>(move(aggregator->mergeValue(move(bucket[p.first]), move(p.second))));
+            using mv_t = C(*)(C, V);
+            auto f_mv = reinterpret_cast<mv_t>(aggregator->mergeValue());
+            bucket[p.first] = f_mv(move(bucket[p.first]), move(p.second));
         }
     }
     for (size_t i = 0; i < numOutputSplits; ++i) {

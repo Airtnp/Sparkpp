@@ -31,8 +31,10 @@ struct SparkContext;
 /// Only derived classes virtual methods know how to change offsets; (CRTP won't work)
 struct RDDBase {
     virtual size_t id() = 0;
-    virtual unique_ptr<IterBase> compute(unique_ptr<Split> split) = 0;
-    virtual unique_ptr<IterBase> iterator(unique_ptr<Split> split) = 0;
+    unique_ptr<IterBase> iterator(unique_ptr<Split> split) {
+        return unique_ptr<IterBase>{ iterator_impl(move(split)) };
+    }
+    virtual IterBase* iterator_impl(unique_ptr<Split> split) = 0;
     // virtual vector<Partition> getPartitions() = 0;
     virtual void serialize_dyn(vector<char>&) const = 0;
     virtual void deserialize_dyn(const char*&, size_t&) = 0;
@@ -68,8 +70,11 @@ struct RDD : RDDBase {
         return *this;
     }
 
-    unique_ptr<IterBase> compute(unique_ptr<Split> split) override = 0;
-    unique_ptr<IterBase> iterator(unique_ptr<Split> split) override;
+    virtual unique_ptr<Iterator<T>> compute(unique_ptr<Split> split) = 0;
+    unique_ptr<Iterator<T>> iterator(unique_ptr<Split> split) {
+        return unique_ptr<Iterator<T>>{ iterator_impl(move(split)) };
+    }
+    Iterator<T>* iterator_impl(unique_ptr<Split> split) override;
 
     span<Dependency*> dependencies() override {
         return make_span(deps);
@@ -102,6 +107,7 @@ struct RDD : RDDBase {
     T reduce(F&& f);
 
     vector<T> collect();
+
 };
 
 #include "rdd/mapped_rdd.hpp"

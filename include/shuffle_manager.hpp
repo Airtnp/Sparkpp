@@ -29,7 +29,7 @@ struct ShuffleManager {
         fs::create_directories(localDir);
         fs::create_directories(shuffleDir);
         char* localIp = std::getenv("SPARK_LOCAL_IP");
-        serverUri = fmt::format("http://{}:{}", localIp, 28001);
+        serverUri = fmt::format("{}", localIp);
         thread thd{[localDir = localDir]() {
             uint16_t port = 28001;
             net::io_context ioc;
@@ -51,7 +51,8 @@ struct ShuffleManager {
                         make_tuple(move(body)),
                         make_tuple(http::status::ok, req.version())
                     };
-                    http::write(socket, req);
+                    res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+                    http::write(socket, res);
                     socket.shutdown(tcp::socket::shutdown_both, ec);
                 });
                 per_conn.detach();

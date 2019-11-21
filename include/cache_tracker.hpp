@@ -244,7 +244,8 @@ struct CacheTracker {
     CacheTrackerReply client(const CacheTrackerMessage& message) {
         io_service ioc;
         ip::tcp::resolver resolver{ioc};
-        ip::tcp::resolver::query query{masterAddr.first, std::to_string(masterAddr.second)};
+        ip::tcp::resolver::query query{masterAddr.first, std::to_string(masterAddr.second),
+                                       boost::asio::ip::resolver_query_base::numeric_service};
         auto iter = resolver.resolve(query);
         ip::tcp::resolver::iterator end;
         ip::tcp::endpoint endpoint = *iter;

@@ -27,7 +27,7 @@ struct MappedRDD : RDD<U> {
         return make_span<Dependency*>(&depP, 1);
     };
 
-    unique_ptr<IterBase> compute(unique_ptr<Split> split) {
+    unique_ptr<Iterator<U>> compute(unique_ptr<Split> split) {
         return make_unique<MapIterator<T, U, F>>(
             dynamic_unique_ptr_cast<Iterator<T>>(prev->iterator(move(split))),
             func
