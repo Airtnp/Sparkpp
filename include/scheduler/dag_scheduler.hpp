@@ -12,7 +12,6 @@
 #include "scheduler/scheduler.hpp"
 #include "scheduler/task.hpp"
 #include "scheduler/stage.hpp"
-#include "scheduler/active_job.hpp"
 #include <boost/asio/thread_pool.hpp>
 #include <boost/asio/post.hpp>
 

@@ -8,7 +8,6 @@
 #include "common.hpp"
 #include "split.hpp"
 #include "dependency.hpp"
-#include "partition.hpp"
 #include "partitioner.hpp"
 #include "serialize_wrapper.hpp"
 #include <capnp/message.h>
