@@ -63,18 +63,25 @@ Some miscellaneous discussions.
 ## FAQ
 
 Q: Is comparing Spark-0.5 mechanism & Spark-2.4.4 mechanism a fair comparision?
+
 A: I think so. I assume that Spark maintains and improves performance as version number increases. E.g.
 
 Spark2.4: [SPARK-21113] Support for read ahead input stream to amortize disk I/O cost in the spill reader
+
 Spark2.3: [SPARK-22062][SPARK-17788][SPARK-21907] Fix various causes of OOMs
+
 Spark2.1: [SPARK-16523]: Speeds up group-by aggregate performance by adding a fast aggregation cache that is backed by a row-based hashmap.
+
 Spark1.6: SPARK-10000 Unified Memory Management - Shared memory for execution and caching instead of exclusive division of the regions.
+
 Spark1.2: netty-based Spark Shuffle Manager, default sort-based Shuffle
 
 Q: Is comparing Sparkpp & Spark-2.4.4 a fair comparision?
+
 A: I have to admit, Sparkpp still lacks of logging, metric, event listening issues, but I suppose they are in the control path. Data path is implemented just same like Spark-0.5. The only difference is the LRU cache. since we don't have cache so far, no unfairness is revealed :).
 
 Q: Why don't compare with native spark?
+
 A: We tried, but failed to setup config (SSH key problem). And native spark caches shuffle in memory (by now) and I don't think it's a fair comparision. We are working on it. Also, we plan to compare it with Spark-0.8 (oldest spark release found yet)
 
 ## Import C++ ecosystem

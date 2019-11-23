@@ -8,7 +8,7 @@ Inspired by rust Spark implementation [native_spark](https://github.com/rajaseka
 
 ## Example
 
-* Check examples/{*.cpp}
+Check examples/{*.cpp}
 
 ## Prerequisites
 
@@ -29,7 +29,10 @@ Check `bin/prepare.sh`
 ## Installation
 
 ```shell script
-./bin/prepare.sh
+# install
+./bin/prepare.sh                 # root
+./bin/check.sh                   # check installation version
+# env
 export SPARK_LOCAL_IP=<local ip>
 export CPUPROFILE=<profile file> # if google-gprof enabled
 export CPUPROFILESIGNAL=<sig>    # if google-gprof enabled
@@ -48,6 +51,9 @@ export CPUPROFILESIGNAL=<sig>    # if google-gprof enabled
 - [ ] new version of Spark optimizations: ShuffleWriter
 - [ ] See other TODOs in files
 
+## Random Thoughts
+
+Check `miscs/discussion.md`
 
 ## Reference
 
