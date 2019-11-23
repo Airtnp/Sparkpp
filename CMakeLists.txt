@@ -8,8 +8,16 @@ set (CXX_EXTRA_FLAGS
         -Wno-missing-field-initializers
         -Wno-comment
         -lboost_serialization
-") # G++ 9.2 in MSYS2 cannot support -fcoroutines...
+")
 add_definitions(${CXX_EXTRA_FLAGS})
+set(CMAKE_CXX_FLAGS_RELEASE
+        "${CMAKE_CXX_FLAGS_RELEASE} -march=native -mtune=native -fwhole-program -flto")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-no-as-needed")
+
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_compile_options(-march=native -mtune=native -fwhole-program -flto)
+endif()
+
 # configure_file()
 
 # execute_process(COMMAND capnp compile -oc++
@@ -27,6 +35,7 @@ add_library(boost::serialization INTERFACE IMPORTED)
 include_directories(${Boost_INCLUDE_DIRS})
 
 find_package(fmt)
+find_package(OpenMP REQUIRED)
 
 include_directories(include)
 include_directories(capnph)
@@ -54,12 +63,13 @@ target_include_directories(Sparkpp PRIVATE 3rdparty/outcome)
 # target_include_directories(Sparkpp PRIVATE 3rdparty/abseil)
 # target_include_directories(Sparkpp PRIVATE 3rdparty/ranges-v3/include)
 target_include_directories(Sparkpp PRIVATE 3rdparty/parallel-hashmap)
-if (WIN32)
-    target_link_libraries(Sparkpp wsock32 ws2_32)
-endif (WIN32)
+
 target_link_libraries(Sparkpp stdc++fs)
 target_link_libraries(Sparkpp boost::serialization)
 target_link_libraries(Sparkpp ${Boost_LIBRARIES})
 target_link_libraries(Sparkpp CapnProto::capnp)
-target_link_libraries(Sparkpp CapnProto::capnp-rpc)
+# target_link_libraries(Sparkpp CapnProto::capnp-rpc)
 target_link_libraries(Sparkpp fmt::fmt)
+target_link_libraries(Sparkpp tcmalloc)
+target_link_libraries(Sparkpp profiler)
+target_link_libraries(Sparkpp OpenMP::OpenMP_CXX)

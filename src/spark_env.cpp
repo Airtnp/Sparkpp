@@ -5,7 +5,7 @@
 #include "common.hpp"
 #include "spark_env.hpp"
 
-void SparkEnv::init(int argc, char **argv, const addr_t& masterAddr) {
+void SparkEnv::init([[maybe_unused]] int argc, char **argv, const addr_t& masterAddr) {
     bool isMaster = false;
     if (!strcmp(argv[1], "master")) {
         isMaster = true;

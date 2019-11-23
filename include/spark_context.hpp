@@ -6,6 +6,8 @@
 #define SPARKPP_SPARK_CONTEXT_HPP
 
 #include <utility>
+#include <rdd/rdd.hpp>
+
 
 #include "common.hpp"
 #include "executor.hpp"
@@ -53,6 +55,7 @@ struct SparkContext {
         return nextShuffleId.fetch_add(1);
     }
 
+    // TODO: make this external configuration
     SparkConfig getConfig(char** argv, addr_t masterAddr, vector<addr_t> slaveAddrs) {
         auto ty = string{argv[1]};
         if (ty == "master") {
@@ -123,7 +126,7 @@ T RDD<T>::reduce(F&& f) {
     auto rf = [f = f](unique_ptr<Iterator<T>> iter) mutable {
         T acc{};
         while (iter->hasNext()) {
-            acc = std::invoke(forward<F>(f), acc, static_cast<T>(iter->next().value()));
+            acc = std::invoke(forward<F>(f), acc, move(iter->next().value()));
         }
         return acc;
     };
@@ -207,7 +210,7 @@ vector<U> DAGScheduler::runJob(F &&func, RDD<T> *finalRdd, const vector<size_t>&
                           }
                       }
                   },
-                  [&](const TaskEndReason::FetchFailed& f) {
+                  [&]([[maybe_unused]] const TaskEndReason::FetchFailed& f) {
                       // TODO: handle failure
                       ;
                   }
@@ -247,14 +250,23 @@ Iterator<T>* RDD<T>::iterator_impl(unique_ptr<Split> split) {
 template<typename T>
 vector<T> RDD<T>::collect() {
     auto cf = [](unique_ptr<Iterator<T>> iter) {
-        vector<T> result;
-        while (iter->hasNext()) {
-            result.push_back(static_cast<T>(iter->next().value()));
-        }
-        return result;
+        return iter->collect();
     };
     auto v = sc.runJob(this, move(cf));
     return flatten(move(v));
+}
+
+template<typename T>
+size_t RDD<T>::count() {
+    auto cf = [](unique_ptr<Iterator<T>> iter) {
+        return iter->count();
+    };
+    auto counts = sc.runJob(this, move(cf));
+    size_t cnt = 0;
+    for (auto i : counts) {
+        cnt += i;
+    }
+    return cnt;
 }
 
 template<typename K, typename V, typename C>
@@ -289,23 +301,24 @@ string ShuffleDependency<K, V, C>::runShuffle(RDDBase* rdd, unique_ptr<Split> sp
         if (!s.is_initialized()) {
             break;
         }
-        auto p = static_cast<pair<K, V>>(s.value());
+        auto p = move(s.value());
         auto bucketId = partitioner->getPartition(p.first);
         auto& bucket = buckets[bucketId];
-        if (!bucket.count(p.first)) {
+        auto b_iter = bucket.find(p.first);
+        if (b_iter == bucket.end()) {
             using fcc_t = C(*)(V);
             auto f_cc = reinterpret_cast<fcc_t>(aggregator->createCombiner());
-            bucket[p.first] = f_cc(move(p.second));
+            bucket[move(p.first)] = f_cc(move(p.second));
         } else {
             using mv_t = C(*)(C, V);
             auto f_mv = reinterpret_cast<mv_t>(aggregator->mergeValue());
-            bucket[p.first] = f_mv(move(bucket[p.first]), move(p.second));
+            b_iter->second = f_mv(move(b_iter->second), move(p.second));
         }
     }
     for (size_t i = 0; i < numOutputSplits; ++i) {
         string file_path = fmt::format("/tmp/sparkpp/shuffle/{}.{}.{}", shuffleId, partition, i);
         std::ofstream ofs{file_path, std::ofstream::binary};
-        boost::archive::binary_oarchive ar{ofs};
+        boost::archive::binary_oarchive ar{ofs, boost::archive::no_header | boost::archive::no_tracking};
         vector<pair<K, C>> v{
                 std::make_move_iterator(buckets[i].begin()),
                 std::make_move_iterator(buckets[i].end())

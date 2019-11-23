@@ -39,7 +39,21 @@ struct Iterator : IterBase {
     // FIXME: lots of virtual calling to this method to get data...
     virtual optional<T> next() = 0;
     virtual bool hasNext() = 0;
-    virtual vector<T> collect() = 0;
+    vector<T> collect() {
+        vector<T> res;
+        while (hasNext()) {
+            res.push_back(move(next().value()));
+        }
+        return res;
+    }
+    size_t count() {
+        size_t cnt = 0;
+        while (hasNext()) {
+            next();
+            cnt += 1;
+        }
+        return cnt;
+    }
 };
 
 
@@ -53,25 +67,33 @@ struct SliceIter : Iterator<T> {
         if (ptr != end) {
             T v = *ptr;
             ++ptr;
-            return {v};
+            return v;
         }
         return {};
     }
     bool hasNext() override {
         return ptr != end;
     }
-    vector<T> collect() override {
-        return {ptr, end};
-    }
 };
 
 /// T must be a standard container type
 template <typename T>
-struct OwnIterator : SliceIter<T> {
+struct OwnIterator : Iterator<T> {
     vector<T> data;
-    // @ref: https://stackoverflow.com/questions/41384793/does-stdmove-invalidate-iterators
-    // move constructor will not invalidate iterators
-    OwnIterator(vector<T> data_) : SliceIter<T>{data_.data(), data_.data() + data_.size()}, data{move(data_)} {}
+    typename vector<T>::iterator iter;
+    typename vector<T>::iterator end;
+    OwnIterator(vector<T> data_) : data{move(data_)}, iter{data.begin()}, end{data.end()} {}
+    optional<T> next() override {
+        if (iter != end) {
+            T v = *iter;
+            ++iter;
+            return v;
+        }
+        return {};
+    }
+    bool hasNext() override {
+        return iter != end;
+    }
 };
 
 template <typename T, typename U, typename F>
@@ -82,19 +104,40 @@ struct MapIterator : Iterator<U> {
         : prev{move(prev)}, func{move(func)} {}
     optional<U> next() override {
         auto s = prev->next();
-        return s.map([func = func](T t) {
+        return s.map([func = func](T t) mutable {
             return invoke(move(func), move(t));
         });
     }
     bool hasNext() override {
         return prev->hasNext();
     }
-    vector<U> collect() override {
-        vector<U> res;
-        while (hasNext()) {
-            res.push_back(move(next().value()));
+};
+
+// F: T -> Vec<U>
+template <typename T, typename U, typename F>
+struct FlatMapIterator : Iterator<U> {
+    unique_ptr<Iterator<T>> prev;
+    F func;
+    optional<vector<U>> current;
+    typename vector<U>::iterator iter;
+    typename vector<U>::iterator end;
+    FlatMapIterator(unique_ptr<Iterator<T>> prev, F func)
+            : prev{move(prev)}, func{move(func)} {}
+    optional<U> next() override {
+        while (!current.is_initialized() || iter == end) {
+            if (!prev->hasNext()) {
+                return {};
+            }
+            current = invoke(func, std::move(prev->next().value()));
+            iter = current->begin();
+            end = current->end();
         }
-        return res;
+        auto u = *iter;
+        ++iter;
+        return u;
+    }
+    bool hasNext() override {
+        return prev->hasNext() || (iter != end);
     }
 };
 
@@ -114,13 +157,6 @@ struct MapValueIterator : Iterator<pair<K, U>> {
     }
     bool hasNext() override {
         return prev->hasNext();
-    }
-    vector<pair<K, U>> collect() override {
-        vector<pair<K, U>> res;
-        while (hasNext()) {
-            res.push_back(move(next().value()));
-        }
-        return res;
     }
 };
 
@@ -145,8 +181,43 @@ struct HashIterator : Iterator<pair<K, C>> {
         ++iter;
         return p;
     }
-    vector<pair<K, C>> collect() override {
-        return {std::make_move_iterator(iter), std::make_move_iterator(end)};
+};
+
+template <typename T, typename F>
+struct FilterIterator : Iterator<T> {
+    unique_ptr<Iterator<T>> prev;
+    F func;
+    optional<T> temp;
+    FilterIterator(unique_ptr<Iterator<T>> prev, F func)
+            : prev{move(prev)}, func{move(func)} {}
+    optional<T> next() override {
+        if (temp.is_initialized()) {
+            optional<T> u{std::move(temp)};
+            temp = boost::none;
+            return u;
+        }
+        while (true) {
+            auto s = prev->next();
+            if (!s.is_initialized()) {
+                return {};
+            }
+            if (invoke(func, s.value())) {
+                return s;
+            }
+        }
+    }
+    bool hasNext() override {
+        if (temp.is_initialized()) {
+            return true;
+        }
+        while (prev->hasNext()) {
+            auto s = prev->next();
+            if (invoke(func, s.value())) {
+                temp = move(s.value());
+                return true;
+            }
+        }
+        return false;
     }
 };
 

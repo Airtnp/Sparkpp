@@ -46,6 +46,25 @@ struct function_traits<R(C::*)(Args...) const> : public function_traits<R(Args..
     using type = R(C::*)(Args...);
 };
 
+// function pointer
+template <typename R, typename... Args>
+struct function_traits<R(*)(Args...) noexcept> : public function_traits<R(Args...)> {
+    using type = R(*)(Args...);
+};
+
+//const, volatile specialization member function
+template <typename R, typename C, typename... Args>
+struct function_traits<R(C::*)(Args...) noexcept> : public function_traits<R(Args...)> {
+    using class_type = C;
+    using type = R(C::*)(Args...);
+};
+
+template <typename R, typename C, typename... Args>
+struct function_traits<R(C::*)(Args...) const noexcept> : public function_traits<R(Args...)> {
+    using class_type = C;
+    using type = R(C::*)(Args...);
+};
+
 //std::function
 template <typename R, typename... Args>
 struct function_traits<std::function<R(Args...)>> : public function_traits<R(Args...)> {

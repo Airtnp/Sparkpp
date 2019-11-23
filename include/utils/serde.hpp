@@ -64,7 +64,7 @@ struct SerialGuard {
     boost::iostreams::stream<boost::iostreams::back_insert_device<vector<char>>> s;
     boost::archive::binary_oarchive oa;
     SerialGuard(std::vector<char>& bytes)
-        : sink{bytes}, s{sink}, oa{s} {}
+        : sink{bytes}, s{sink}, oa{s, boost::archive::no_header | boost::archive::no_tracking} {}
     template <typename T>
     SerialGuard& operator<<(T&& t) {
         oa << std::forward<T>(t);
@@ -85,7 +85,7 @@ struct DeserialGuard {
     boost::iostreams::stream<boost::iostreams::basic_array_source<char>> s;
     boost::archive::binary_iarchive ia;
     DeserialGuard(const char* bytes, std::size_t size)
-        : device{bytes, size}, s{device}, ia{s} {}
+        : device{bytes, size}, s{device}, ia{s, boost::archive::no_header | boost::archive::no_tracking} {}
     template <typename T>
     DeserialGuard& operator>>(T& t) {
         ia >> t;

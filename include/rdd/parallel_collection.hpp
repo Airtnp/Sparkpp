@@ -87,6 +87,10 @@ struct ParallelCollection : RDD<T> {
         bytes += serialSize;
         size -= serialSize;
     };
+
+    void finalize() override {
+        pimpl.reset(nullptr);
+    }
 };
 
 

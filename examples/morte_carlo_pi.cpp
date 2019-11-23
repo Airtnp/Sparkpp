@@ -27,14 +27,16 @@ int main(int argc, char** argv) {
 
     auto t_begin = steady_clock::now();
 
-    // insufficient use of threads
-    auto rdd = sc.parallelize(values, 2);
-    auto random = rdd.map([](long long) noexcept {
+    // refer miscs/morte_carlo_pi.scala
+    auto rdd = sc.parallelize(values, 4);
+    auto random = rdd.map([](long long n) noexcept {
         unsigned long long count = 0;
-        // #pragma omp parallel for reduction(+:count) default(none) shared(chunkSize)
+#pragma omp parallel for reduction(+:count)
         for (auto i = 0; i < chunkSize; ++i) {
-            double x = (rand() * 2.0) / RAND_MAX - 1;
-            double y = (rand() * 2.0) / RAND_MAX - 1;
+            n = (n * 998244353ll + 19260817ll) % 134456;
+            double x = n / 67228.0 - 1;
+            n = (n * 998244353ll + 19260817ll) % 134456;
+            double y = n / 67228.0 - 1;
             if (x * x + y * y < 1) {
                 ++count;
             }

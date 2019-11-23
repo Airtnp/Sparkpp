@@ -42,6 +42,8 @@ struct RDDBase {
     // virtual vector<unique_ptr<Split>> splits() = 0;
     virtual unique_ptr<Split> split(size_t partitionId) = 0;
     virtual span<Dependency*> dependencies() = 0;
+    // after reviving from buffer & execution, release resources
+    virtual void finalize() {}
 };
 
 RDDBase* rdd_from_reader(::capnp::Data::Reader reader);
@@ -51,8 +53,14 @@ RDDBase* rdd_from_reader(::capnp::Data::Reader reader);
 template <typename T, typename U, typename F>
 struct MappedRDD;
 
+template <typename T, typename U, typename F>
+struct FlatMappedRDD;
+
 template <typename T, typename K, typename V, typename F>
 struct MapPairRDD;
+
+template <typename T, typename F>
+struct FilterRDD;
 
 template <typename T>
 struct RDD : RDDBase {
@@ -87,17 +95,31 @@ struct RDD : RDDBase {
     // But this will cause extra overhead in type serialization & type system
     // Currently every RDD<T> should live long through the program.
 
-    // Invocable<T> F
+    // Invocable<T> F -> U
     template <typename F, typename U = typename function_traits<F>::result_type>
     auto map(F f) -> MappedRDD<T, U, F> {
         return MappedRDD<T, U, F>{this, move(f)};
     }
 
+    // Invocable<T> F -> Vec<U>
+    template <typename F, typename V = typename function_traits<F>::result_type,
+            typename U = typename V::value_type>
+    auto flatMap(F f) -> FlatMappedRDD<T, U, F> {
+        return FlatMappedRDD<T, U, F>{this, move(f)};
+    }
+
+    // Invocable<T> F -> pair<K, V>
     template <typename F,
             typename R = typename function_traits<F>::result_type,
             typename K = typename R::first_type, typename V = typename R::second_type>
     auto mapPair(F f) -> MapPairRDD<T, K, V, F> {
         return MapPairRDD<T, K, V, F>{this, move(f)};
+    }
+
+    // Invocable<T> F -> bool
+    template <typename F>
+    auto filter(F f) -> FilterRDD<T, F> {
+        return FilterRDD<T, F>{this, move(f)};
     }
 
     // Actions, Eager
@@ -107,7 +129,7 @@ struct RDD : RDDBase {
     T reduce(F&& f);
 
     vector<T> collect();
-
+    size_t count();
 };
 
 #include "rdd/mapped_rdd.hpp"

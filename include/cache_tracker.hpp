@@ -340,7 +340,7 @@ struct CacheTracker {
             deserialize(vec, after_val->v.data(), after_val->v.size());
             return make_unique<OwnIterator<T>>(move(vec));
         }
-        auto iter = dynamic_unique_ptr_cast<Iterator<T>>(rdd->compute(move(split)));
+        auto iter = rdd->compute(move(split));
         auto v = iter->collect();
         vector<char> bytes;
         serialize(v, bytes);

@@ -46,7 +46,9 @@ struct ResultTask : Task {
         : taskId{tid}, runId{rid}, stageId{sid}, rdd{r}, func{f}, partition{pid}, locs{move(l)}, outputId{oid} {}
     Storage run([[maybe_unused]] size_t attemptId) {
         unique_ptr<Split> split = rdd->split(partition);
-        return func->call(rdd->iterator(move(split)));
+        auto s = func->call(rdd->iterator(move(split)));
+        rdd->finalize();
+        return s;
     }
     vector<host_t> preferredLocations() override {
         return locs;
@@ -87,6 +89,7 @@ struct ShuffleMapTask : Task {
         Storage st{
             {s.begin(), s.end()}
         };
+        rdd->finalize();
         return st;
     }
     size_t task_id() const override {

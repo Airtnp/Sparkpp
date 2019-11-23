@@ -35,7 +35,7 @@ struct PairRDD : RDD<pair<K, V>> {
     auto reduceByKey(F func, size_t numSplits) {
         auto part = make_unique<HashPartitioner<K>>(numSplits);
         auto createCombiner = +[](V v) { return v; };
-        auto aggr = make_unique<Aggregator>(createCombiner, +func, +func);
+        auto aggr = make_unique<Aggregator<K, V, V>>(createCombiner, +func, +func);
         return combineByKey<V>(move(aggr), move(part));
     }
 
@@ -83,7 +83,7 @@ struct MapPairRDD : PairRDD<K, V> {
 
     unique_ptr<Iterator<pair<K, V>>> compute(unique_ptr<Split> split) {
         return make_unique<MapIterator<T, pair_t, F>>(
-                dynamic_unique_ptr_cast<Iterator<T>>(prev->iterator(move(split))),
+                move(prev->iterator(move(split))),
                 func
         );
     };
@@ -127,7 +127,7 @@ struct MappedValuesRDD : PairRDD<K, U> {
     };
     unique_ptr<Iterator<pair<K, U>>> compute(unique_ptr<Split> split) {
         return make_unique<MapValueIterator<K, V, U, F>>(
-                dynamic_unique_ptr_cast<Iterator<pair<K, V>>>(prev->iterator(move(split))),
+                move(prev->iterator(move(split))),
                 func
         );
     };
@@ -186,8 +186,10 @@ struct ShuffleRDD : PairRDD<K, C> {
         size -= sizeof(ShuffleRDD);
         parent = reinterpret_cast<RDD<pair<K, V>>*>(const_cast<char*>(bytes));
         parent->deserialize_dyn(bytes, size);
-        // plain type
+        // avoid UB destructor
+        partitioner.release();
         aggregator.release();
+        // plain type
         auto aggr = reinterpret_cast<AggregatorBase*>(const_cast<char*>(bytes));
         aggr->deserialize_dyn(bytes, size);
         aggregator.reset(aggr);

@@ -83,7 +83,7 @@ void ParallelShuffleFetcher::fetch(size_t shuffleId, size_t reduceId, F &&func) 
                         boost::asio::buffers_end(res.body().data())
                     };
                     std::stringstream ss{move(body)};
-                    boost::archive::binary_iarchive ia{ss};
+                    boost::archive::binary_iarchive ia{ss, boost::archive::no_header | boost::archive::no_tracking};
                     ia >> data;
                     resultQueue.enqueue(move(data));
                 }

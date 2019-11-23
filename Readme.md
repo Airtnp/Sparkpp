@@ -27,45 +27,18 @@ A prototype implementation of Spark in C++.
 - [ ] Async support (-fcoroutines, boost::asio::io_service::async_accept), replacing raw socket + thread_pool
 - [ ] Compare single boost::serialization without Cap'n Proto (& with boost flags, like no_headers)
 - [ ] Add config (master/slave addr/port) file support
-- [ ] Test optimization flags
-```text
-CC          = gcc
-CCSTD       = -std=c99
-CCWFLAGS    = -Wall -Wextra -Wshadow -Wpedantic --pedantic-errors -O2 $(CCSTD)
-CCNFLAGS    = -Wno-unused-value -Wno-unused-parameter -Wno-attributes -Wno-unused-variable
-CCGDBFLAGS  = -g
-CCFLAGS     = $(CCWFLAGS) $(CCNFLAGS) $(CCGDBFLAGS)
-
-CXX         = g++
-CXXSTD      = -std=c++17
-CXXOPFLAGS  = -Ofast -DNDEBUG \
-	      -march=native \
-	      -fwhole-program -flto \
-	      -fprefetch-loop-arrays \
-	      -Wno-coverage-mismatch \
-	      -fno-rtti \
-	      -fomit-frame-pointer \
-	      -falign-functions=16 -falign-loops=16
-CXXWFLAGS   = -Wall -Wextra -Wshadow -Wpedantic --pedantic-errors
-CXXADWFLAGS = -Wduplicated-cond -Wduplicated-branches \
-	      -Wlogical-op -Wnull-deference -Wold-style-cast \
-	      -Wuseless-cast -Wjump-misses-init \
-	      -Wdoule-promotion -Wformat=2
-	      # GCC7: -Wrestrict
-CXXNFLAGS   = -Wno-unused-value -Wno-unused-parameter -Wno-attributes -Wno-unused-variable
-CXXSANFLAGS = -fsanitize=undefined,address,leak,bounds,bool,enum
-CXXDBFLAGS  = -g3 -Og -DDEBUG
-CXXFLAGS    = $(CXXWFLAGS) $(CXXNFLAGS) $(CXXSTD)
-```
-
+- [ ] See other TODOs in files
+- [ ] new version of Spark optimizations: ShuffleWriter
 
 
 ## Required Libraries
 
 * Boost
-* - Serialization
-* - Asio
-* Cap'n Proto
+* - [Serialization](https://github.com/boostorg/serialization)
+* - [Asio](https://github.com/boostorg/asio)
+* - [Beast](https://github.com/boostorg/beast)
+* [Cap'n Proto](https://github.com/capnproto/capnproto)
+* [fmt](https://github.com/fmtlib/fmt)
 
 ## Installation
 
@@ -83,8 +56,24 @@ export SPARK_LOCAL_IP=<local ip>
 * Toolchains -> Add remote host (set IP)
 * Cmake -> Add build option (set environment variable, IP)
 * Deployment -> Set mapping (/home/ubuntu/Sparkpp)
-* Start Sparkpp-slave | Debug-slave1, Sparkpp-slave | Debug-slave2, ...
-* Start Sparkpp | Debug
+* Start Sparkpp-slave | D/R-slave1, Sparkpp-slave | D/R-slave2, ...
+* Start Sparkpp | D/R
+
+## Benchmarks
+* 3 Amazon EC2 t3a.large instances (2 cores/4 threads, 8G memory, 8G disk)
+* WordCount (1.45G, 80 files) / (0.95G, 40 files)
+* - Sparkpp: 43115ms 43696ms / 27931ms 28008ms (overhead, unordered_map::count/string hash (std::_Hash_bytes by default))
+* - Spark2.4.4: 85615ms 82586ms / 53336ms 48894ms
+* - Memory: 1.13G vs. 2.87G
+* Morte Carlo Pi (1e6 * 1e4 tests, hand-written LCG)
+* - Sparkpp: 29949ms 29584ms 29917ms
+* - Spark2.4.4: 51571ms 50725ms 49859ms
+* Morte Carlo Pi for OpenMP test (1e6 * 1e4 tests, slow rand function)
+* - Sparkpp-4: 
+* - Sparkpp-2: 
+* - 
+
+
 
 
 

@@ -849,4 +849,6 @@ CMakeFiles/
 .vs/
 .vscode/
 
+examples/input
+
 Makefile
