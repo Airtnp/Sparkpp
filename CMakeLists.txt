@@ -50,12 +50,10 @@ include_directories(capnph)
 include_directories(3rdparty)
 include_directories(3rdparty/concurrentqueue)
 include_directories(3rdparty/parallel-hashmap)
-include_directories(3rdparty/outcome)
 
 
 file(GLOB_RECURSE HEADERS
         /concurrentqueue)
-include_directories(3rdparty/outcome)
 file(GLOB_RECURSE HEADERS
         "${PROJECT_SOURCE_DIR}/include/*.hpp"
         )
@@ -68,7 +66,6 @@ target_include_directories(Sparkpp PRIVATE include)
 target_include_directories(Sparkpp PRIVATE capnph)
 target_include_directories(Sparkpp PRIVATE 3rdparty)
 target_include_directories(Sparkpp PRIVATE 3rdparty/concurrentqueue)
-target_include_directories(Sparkpp PRIVATE 3rdparty/outcome)
 target_include_directories(Sparkpp PRIVATE 3rdparty/parallel-hashmap)
 
 target_link_libraries(Sparkpp stdc++fs)
