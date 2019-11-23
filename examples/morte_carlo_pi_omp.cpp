@@ -1,6 +1,7 @@
 #include <iostream>
 #include <chrono>
 #include <algorithm>
+#include <random>
 #include "spark_env.hpp"
 #include "spark_context.hpp"
 
@@ -17,22 +18,25 @@ int main(int argc, char** argv) {
     env.init(argc, argv, masterAddr);
     auto sc = SparkContext{argc, argv, masterAddr, slaveAddrs};
 
-    constexpr long long chunks = 1e6;
-    constexpr long long chunkSize = 1e4;
+    constexpr long long chunks = 8;
+    constexpr long long chunkSize = 1e9;
     vector<long long> values(chunks);
     std::iota(values.begin(), values.end(), 0ll);
 
     auto t_begin = steady_clock::now();
 
-    // refer miscs/morte_carlo_pi.scala
-    auto rdd = sc.parallelize(values, 4);
-    auto random = rdd.map([](long long n) noexcept {
+    // insufficient use of slaves (2 cores, 4 threads)
+    auto rdd = sc.parallelize(values, 2);
+    auto random = rdd.map([](long long) noexcept {
         unsigned long long count = 0;
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<double> dis{-1.0, 1.0};
+        // but we can start OpenMP tasks per slave (by FIFO dispatching)
+        #pragma omp parallel for reduction(+:count) default(none) private(dis, gen)
         for (auto i = 0; i < chunkSize; ++i) {
-            n = (n * 998244353ll + 19260817ll) % 134456;
-            double x = n / 67228.0 - 1;
-            n = (n * 998244353ll + 19260817ll) % 134456;
-            double y = n / 67228.0 - 1;
+            double x = dis(gen);
+            double y = dis(gen);
             if (x * x + y * y < 1) {
                 ++count;
             }

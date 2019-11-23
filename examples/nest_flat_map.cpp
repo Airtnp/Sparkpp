@@ -1,11 +1,8 @@
 #include <iostream>
-#include <fstream>
+#include <algorithm>
 #include <chrono>
 #include "spark_env.hpp"
 #include "spark_context.hpp"
-#include <algorithm>
-#include <boost/algorithm/string.hpp>
-#include <fmt/format.h>
 
 using namespace std::chrono;
 

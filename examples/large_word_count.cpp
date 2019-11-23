@@ -1,9 +1,9 @@
 #include <iostream>
 #include <fstream>
 #include <chrono>
+#include <algorithm>
 #include "spark_env.hpp"
 #include "spark_context.hpp"
-#include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <fmt/format.h>
 
@@ -18,21 +18,13 @@ int main(int argc, char** argv) {
             {"3.17.81.214", 24457}
     };
     env.init(argc, argv, masterAddr);
-    // spark-shell --master
     auto sc = SparkContext{argc, argv, masterAddr, slaveAddrs};
     vector<size_t> files(40);
-    // val files = 0 until n;
     std::iota(files.begin(), files.end(), 0);
 
-    // spark.time(sc
-    //      .parallelize(files, files.length)
-    //      .flatMap(idx => Source.fromFile(f"/home/ubuntu/Sparkpp/examples/input/input_$idx")
-    //                              .getLines
-    //                              .flatMap(l => l.split(' ')))
-    //      .map(s => (s, 1))
-    //      .reduceByKey(_ + _, 2)
-    //      .collect())
     auto t_begin = steady_clock::now();
+
+    // refer miscs/word_count.scala
     auto rdd = sc.parallelize(files, files.size());
     auto rdd2 = rdd.flatMap([](size_t v) noexcept {
         auto path = fmt::format("/home/ubuntu/Sparkpp/examples/input/input_{}", v);
@@ -54,6 +46,7 @@ int main(int argc, char** argv) {
         return a + b;
     }, 8);
     auto result = rdd4.collect();
+
     auto t_end = steady_clock::now();
 
     std::cout << result.size() << '\n';

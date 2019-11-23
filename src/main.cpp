@@ -1,13 +1,6 @@
 #include <iostream>
-#include <fstream>
-#include <chrono>
 #include "spark_env.hpp"
 #include "spark_context.hpp"
-#include <algorithm>
-#include <boost/algorithm/string.hpp>
-#include <fmt/format.h>
-
-using namespace std::chrono;
 
 SparkEnv env;
 
@@ -19,37 +12,29 @@ int main(int argc, char** argv) {
     };
     env.init(argc, argv, masterAddr);
     auto sc = SparkContext{argc, argv, masterAddr, slaveAddrs};
-
-    constexpr long long chunks = 1e6;
-    constexpr long long chunkSize = 1e4;
-    vector<long long> values(chunks);
-    std::iota(values.begin(), values.end(), 0ll);
-
-    auto t_begin = steady_clock::now();
-
-    // insufficient use of threads
-    auto rdd = sc.parallelize(values, 2);
-    auto random = rdd.map([](long long) noexcept {
-        unsigned long long count = 0;
-        // #pragma omp parallel for reduction(+:count) default(none) shared(chunkSize)
-        for (auto i = 0; i < chunkSize; ++i) {
-            double x = (rand() * 2.0) / RAND_MAX - 1;
-            double y = (rand() * 2.0) / RAND_MAX - 1;
-            if (x * x + y * y < 1) {
-                ++count;
-            }
+    vector<int> values = {1, 2, 3, 4, 5, 6, 7};
+    auto rdd = sc.parallelize(values, 3);
+    auto rdd2 = rdd.map([](int x) {
+        return x + 1;
+    });
+    auto rdd3 = rdd2.map([](int x) {
+        return x - 1;
+    });
+    auto rdd4 = rdd3.mapPair([](int x) {
+        return make_pair(x % 2, x);
+    });
+    // (1, 3, 5, 7) | (2, 4, 6)
+    auto rdd5 = rdd4.groupByKey(2);
+    // 16 | 12
+    auto rdd7 = rdd5.map([](pair<int, vector<int>> x) -> int {
+        int acc = 0;
+        for (auto i : x.second) {
+            acc += i;
         }
-        return count;
+        return acc;
     });
-
-    auto cnt = random.reduce([](unsigned long long n, unsigned long long m) {
-        return n + m;
-    });
-
-    auto t_end = steady_clock::now();
-
-    std::cout << "Pi = " << (4.0 * cnt / chunks / chunkSize) << '\n';
-    std::cout << "Elapsed time in milliseconds: "
-              << duration_cast<milliseconds>(t_end - t_begin).count() << " ms\n";
+    auto v = rdd7.collect();
+    // 12, 16 or 16, 12
+    std::cout << v[0] << v[1] << '\n';
     return 0;
 }
