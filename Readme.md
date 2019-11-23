@@ -4,15 +4,15 @@ A na(t)ive proof-of-concept implementation of Apache Spark in C++.
 
 Compiled & tested under gcc-9.2.1, boost-1.71, cmake-3.15.
 
-Inspired by rust Spark implementation [native_spark](https://github.com/rajasekarv/native_spark) and based on [Spark-0.5](https://github.com/apache/spark/tree/branch-0.5)
+Inspired by rust Spark implementation [native_spark](https://github.com/rajasekarv/native_spark) and based on [Spark-0.5](https://github.com/apache/spark/tree/branch-0.5).
 
 ## Example
 
-Check examples/{*.cpp}
+Check [examples](./examples)
 
 ## Prerequisites
 
-Check `bin/prepare.sh`
+Check [bin/prepare.sh](./bin/prepare.sh)
 
 * Boost
 * - [Serialization](https://github.com/boostorg/serialization)
@@ -53,7 +53,7 @@ export CPUPROFILESIGNAL=<sig>    # if google-gprof enabled
 
 ## Random Thoughts
 
-Check `miscs/discussion.md`
+Check [miscs/discussion.md](./miscs/discussions.md)
 
 ## Reference
 
