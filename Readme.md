@@ -53,7 +53,7 @@ export CPUPROFILESIGNAL=<sig>    # if google-gprof enabled
 
 ## Random Thoughts
 
-Check [miscs/discussion.md](./miscs/discussions.md)
+Check [miscs/discussion.md](./miscs/discussions.md) and [miscs/report.pdf](./miscs/report.pdf)
 
 ## Reference
 
