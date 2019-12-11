@@ -234,7 +234,11 @@ struct FnBase {
 template <typename T>
 void serialize(const T& v, vector<char>& bytes);
 
-/// The wrapped function must have no reference / environment dependency (value semantics)
+/// The wrapped function must have 
+///     no reference / 
+///     environment dependency / 
+///     non-trivial constructible states 
+///     (value semantics)
 template <typename F>
 struct FnWrapper : FnBase {
     F f;

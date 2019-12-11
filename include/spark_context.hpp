@@ -120,6 +120,10 @@ struct SparkContext {
 
 
 // HACK: weird solution for circular import dependency
+// FIXME: to avoid huge amount of dynamic dispatchs (1 task, 1 rdd, 1 action, N iterator)
+//      each actions should be builtin-function of iterators
+//      where `next()` & `hasNext()` should be non-virtual
+//      but `collect()`, `reduce()`, `count()` should be virtual
 template<typename T>
 template<typename F>
 T RDD<T>::reduce(F&& f) {
